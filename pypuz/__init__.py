@@ -1,0 +1,1 @@
+from pypuz import Puzzle
