@@ -50,6 +50,7 @@ class Grid:
         self.height = max(c.y for c in cells) + 1
         self.width = max(c.x for c in cells) + 1
 
+
     # return the cell at (x,y)
     def cellAt(self, x, y):
         for c in self.cells:
@@ -203,6 +204,11 @@ class Puzzle:
                 cell_value, isBlock = pz.solution[i], None
                 if cell_value == '.':
                     cell_value, isBlock = None, True
+                # Rebus
+                if pz.has_rebus():
+                    r = pz.rebus()
+                    if i in r.get_rebus_squares():
+                        cell_value = r.get_rebus_solution(i)
                 cell = Cell(x, y, solution=cell_value, isBlock=isBlock)
                 cells.append(cell)
                 i += 1
