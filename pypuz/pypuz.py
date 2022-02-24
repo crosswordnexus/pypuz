@@ -50,6 +50,23 @@ class Grid:
         self.height = max(c.y for c in cells) + 1
         self.width = max(c.x for c in cells) + 1
 
+    def __repr__(self):
+        return json.dumps(self.solutionArray())
+
+    def solutionArray(self):
+        arr = []
+        for y in range(self.height):
+            row = []
+            for x in range(self.width):
+                c = self.cellAt(x, y)
+                letter = c.solution
+                if c.isBlock:
+                    letter = '#'
+                if c.isEmpty:
+                    letter = '_'
+                row.append(letter)
+            arr.append(row)
+        return arr
 
     # return the cell at (x,y)
     def cellAt(self, x, y):
