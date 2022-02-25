@@ -1,0 +1,95 @@
+{
+    "_id": "d48pv5ptc5cdt8xozmqy",
+    "title": "Test 3x3",
+    "author": "Alex Boisvert",
+    "copyright": "© 2022 Alex Boisvert. CC BY 4.0 License.",
+    "block": "#",
+    "empty": "_",
+    "version": "http://ipuz.org/v2",
+    "kind": [
+        "http://ipuz.org/crossword#1"
+    ],
+    "dimensions": {
+        "width": 3,
+        "height": 3
+    },
+    "puzzle": [
+        [
+            "#",
+            1,
+            {
+                "cell": 2,
+                "style": {
+                    "shapebg": "circle"
+                }
+            }
+        ],
+        [
+            3,
+            {
+                "cell": "_",
+                "style": {
+                    "shapebg": "circle"
+                }
+            },
+            "_"
+        ],
+        [
+            {
+                "cell": 4,
+                "style": {
+                    "shapebg": "circle"
+                }
+            },
+            "_",
+            "#"
+        ]
+    ],
+    "clues": {
+        "Across": [
+            [
+                1,
+                "TV spot"
+            ],
+            [
+                3,
+                "Treat for a monkey"
+            ],
+            [
+                4,
+                "@"
+            ]
+        ],
+        "Down": [
+            [
+                1,
+                "College course in which you study the human body (Abbr.)"
+            ],
+            [
+                2,
+                "Genetic code carrier"
+            ],
+            [
+                3,
+                "Sheep's cry"
+            ]
+        ]
+    },
+    "solution": [
+        [
+            "#",
+            "A",
+            "D"
+        ],
+        [
+            "BA",
+            "NA",
+            "NA"
+        ],
+        [
+            "A",
+            "T",
+            "#"
+        ]
+    ]
+}
