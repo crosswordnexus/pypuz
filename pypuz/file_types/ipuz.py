@@ -58,6 +58,10 @@ def read_ipuzfile(f):
                     cell['isEmpty'] = True
                 elif ipuzcell != EMPTY:
                     cell['number'] = ipuzcell
+                try:
+                    cell['solution'] = ipuzdata['solution'][y][x]
+                except: # no solution
+                    pass
             # case 2: we have a dictionary
             else:
                 icell = ipuzcell.get('cell', EMPTY)
@@ -68,11 +72,11 @@ def read_ipuzfile(f):
                 elif icell != EMPTY:
                     cell['number'] = icell
                 cell['style'] = ordereddict_to_dict(ipuzcell.get('style', {}))
-                cell['value'] = ipuzcell.get('value')
+                if ipuzcell.get('value'):
+                    cell['value'] = ipuzcell.get('value')
                 try:
-                    cell['solution'] = ipuz['solution'][y][x]
-                except:
-                    # no solution
+                    cell['solution'] = ipuzdata['solution'][y][x]
+                except: # no solution
                     pass
                 #END try
             #END if/else
@@ -84,7 +88,7 @@ def read_ipuzfile(f):
     ## Clues ##
     # Clues don't always come with explicit cell locations, which is unfortunate
     # but we'll handle that in post, so to speak
-    clues = []
+    ret_clues = []
     # The way clues are set up, it can either be a list or a dictionary
     for title, clues in ipuzdata.get('clues', {}).items():
         #[ {'title': 'Across', 'clues': [...], 'title': 'Down', 'clues': [...]} ]
@@ -96,20 +100,22 @@ def read_ipuzfile(f):
                 number, clue = clue1
                 thisClues.append({'number': number, 'clue': clue})
             else:
+                number = clue1.get('number', '')
+                clue = clue1.get('clue', '')
                 # cells are 1-indexed unfortunately
                 cells1 = clue1['cells']
                 cells = []
                 for cell in cells1:
                     cells.append([cell[0]-1, cell[1]-1])
-                thisClues.append({'number': clue1.get('number', ''), 'clue': clue1.get('clue', ''), 'cells': cells})
+                thisClues.append({'number': number, 'clue': clue, 'cells': cells})
             #END if/else
         #END for clue1
-        clues.append({'title': title, 'clues': thisClues})
+        ret_clues.append({'title': title, 'clues': thisClues})
     #END for title/clues
     ## Hack for CrossFire-exported iPuz files ##
-    if len(clues) == 2:
-        if clues[0]['title'].lower() == 'down' and clues[1]['title'].lower() == 'across':
-            clues = [clues[1], clues[0]]
+    if len(ret_clues) == 2:
+        if ret_clues[0]['title'].lower() == 'down' and ret_clues[1]['title'].lower() == 'across':
+            ret_clues = [ret_clues[1], ret_clues[0]]
     #END hack
-    ret['clues'] = clues
+    ret['clues'] = ret_clues
     return ret
