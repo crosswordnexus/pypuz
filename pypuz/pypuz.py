@@ -224,6 +224,9 @@ class Puzzle:
         for y in range(metadata.height):
             for x in range(metadata.width):
                 cell_value, isBlock = pz.solution[i], None
+                fill = pz.fill[i]
+                if fill in ('-', '.', ':'):
+                    fill = None
                 # black squares can occasionally be ":" in puz files
                 if cell_value in ('.', ':'):
                     cell_value, isBlock = None, True
@@ -238,7 +241,7 @@ class Puzzle:
                     m = pz.markup()
                     if i in m.get_markup_squares():
                         stylespec = {"shapebg": "circle"}
-                cell = Cell(x, y, solution=cell_value, isBlock=isBlock, styleSpec=stylespec)
+                cell = Cell(x, y, solution=cell_value, value=fill, isBlock=isBlock, styleSpec=stylespec)
                 cells.append(cell)
                 i += 1
             #END for x
