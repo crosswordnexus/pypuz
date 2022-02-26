@@ -23,15 +23,17 @@ class Cell:
     The only necessary components are x and y (the coordinates, 0-indexed).
     Other possible components:
     solution (string)
+    value (string -- the currently filled value of the cell)
     number (string -- the number or letter in the top left)
     isBlock (boolean -- set to True if the cell is a black square)
     isEmpty (boolean -- set to True if the cell is a "void")
     styleSpec (dictionary -- see the relevant section on http://www.ipuz.org/)
     """
-    def __init__(self, x, y, solution=None, number=None, isBlock=None, isEmpty=None, styleSpec={}):
+    def __init__(self, x, y, solution=None, value=None, number=None, isBlock=None, isEmpty=None, styleSpec={}):
         self.x = x
         self.y = y
         self.solution = solution
+        self.value = value
         self.number = number
         self.isBlock = isBlock
         self.isEmpty = isEmpty
