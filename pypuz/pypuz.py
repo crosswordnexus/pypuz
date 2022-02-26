@@ -27,9 +27,9 @@ class Cell:
     number (string -- the number or letter in the top left)
     isBlock (boolean -- set to True if the cell is a black square)
     isEmpty (boolean -- set to True if the cell is a "void")
-    styleSpec (dictionary -- see the relevant section on http://www.ipuz.org/)
+    style (dictionary -- see the "StyleSpec" section on http://www.ipuz.org/)
     """
-    def __init__(self, x, y, solution=None, value=None, number=None, isBlock=None, isEmpty=None, styleSpec={}):
+    def __init__(self, x, y, solution=None, value=None, number=None, isBlock=None, isEmpty=None, style={}):
         self.x = x
         self.y = y
         self.solution = solution
@@ -37,7 +37,7 @@ class Cell:
         self.number = number
         self.isBlock = isBlock
         self.isEmpty = isEmpty
-        self.styleSpec = styleSpec
+        self.style = style
 
     def __repr__(self):
         return f"Cell({{({self.x}, {self.y}), {self.solution}}})"
@@ -99,9 +99,9 @@ class Grid:
             return True
         elif self.isBlack(x + md['xoffset'], y + md['yoffset']):
             return True
-        elif dir in self.cellAt(x, y).styleSpec.get('barred', ''):
+        elif dir in self.cellAt(x, y).style.get('barred', ''):
             return True
-        elif dir2 in self.cellAt(x + md['xoffset'], y + md['yoffset']).styleSpec.get('barred', ''):
+        elif dir2 in self.cellAt(x + md['xoffset'], y + md['yoffset']).style.get('barred', ''):
             return True
         return False
     #END hasBlack
@@ -236,12 +236,12 @@ class Puzzle:
                     if i in r.get_rebus_squares():
                         cell_value = r.get_rebus_solution(i)
                 # Circles
-                stylespec = {}
+                style = {}
                 if pz.has_markup():
                     m = pz.markup()
                     if i in m.get_markup_squares():
-                        stylespec = {"shapebg": "circle"}
-                cell = Cell(x, y, solution=cell_value, value=fill, isBlock=isBlock, styleSpec=stylespec)
+                        style = {"shapebg": "circle"}
+                cell = Cell(x, y, solution=cell_value, value=fill, isBlock=isBlock, style=style)
                 cells.append(cell)
                 i += 1
             #END for x
