@@ -1,4 +1,4 @@
-from file_types import puz
+from file_types import puz, ipuz
 import json
 CROSSWORD_TYPE = 'crossword'
 
@@ -23,19 +23,24 @@ class Cell:
     The only necessary components are x and y (the coordinates, 0-indexed).
     Other possible components:
     solution (string)
+    value (string -- the currently filled value of the cell)
     number (string -- the number or letter in the top left)
     isBlock (boolean -- set to True if the cell is a black square)
     isEmpty (boolean -- set to True if the cell is a "void")
-    styleSpec (dictionary -- see the relevant section on http://www.ipuz.org/)
+    style (dictionary -- see the "StyleSpec" section on http://www.ipuz.org/)
     """
-    def __init__(self, x, y, solution=None, number=None, isBlock=None, isEmpty=None, styleSpec={}):
+    def __init__(self, x, y, solution=None, value=None, number=None, isBlock=None, isEmpty=None, style={}):
         self.x = x
         self.y = y
         self.solution = solution
-        self.number = number
+        self.value = value
+        if number:
+            self.number = str(number)
+        else:
+            self.number = None
         self.isBlock = isBlock
         self.isEmpty = isEmpty
-        self.styleSpec = styleSpec
+        self.style = style
 
     def __repr__(self):
         return f"Cell({{({self.x}, {self.y}), {self.solution}}})"
@@ -44,7 +49,7 @@ class Grid:
     """
     Class for a crossword grid
     """
-    # here "solution" is a list of Cell objects
+    # here "cells" is a list of Cell objects
     def __init__(self, cells):
         self.cells = cells
         self.height = max(c.y for c in cells) + 1
@@ -97,9 +102,9 @@ class Grid:
             return True
         elif self.isBlack(x + md['xoffset'], y + md['yoffset']):
             return True
-        elif dir in self.cellAt(x, y).styleSpec.get('barred', ''):
+        elif dir in self.cellAt(x, y).style.get('barred', ''):
             return True
-        elif dir2 in self.cellAt(x + md['xoffset'], y + md['yoffset']).styleSpec.get('barred', ''):
+        elif dir2 in self.cellAt(x + md['xoffset'], y + md['yoffset']).style.get('barred', ''):
             return True
         return False
     #END hasBlack
@@ -118,7 +123,7 @@ class Grid:
             thisNumbers = []
             for x in range(self.width):
                 if self.startAcrossWord(x, y) or self.startDownWord(x, y):
-                    self.cellAt(x, y).number = thisNumber
+                    self.cellAt(x, y).number = str(thisNumber)
                     thisNumber += 1
                 #END if
             #END for x
@@ -180,7 +185,10 @@ class Clue:
     def __init__(self, clue, cells, number=None):
         self.clue = clue
         self.cells = cells
-        self.number = number
+        if number is not None:
+            self.number = str(number)
+        else:
+            self.number = None
 
     def __repr__(self):
         return self.clue
@@ -222,6 +230,9 @@ class Puzzle:
         for y in range(metadata.height):
             for x in range(metadata.width):
                 cell_value, isBlock = pz.solution[i], None
+                fill = pz.fill[i]
+                if fill in ('-', '.', ':'):
+                    fill = None
                 # black squares can occasionally be ":" in puz files
                 if cell_value in ('.', ':'):
                     cell_value, isBlock = None, True
@@ -231,12 +242,12 @@ class Puzzle:
                     if i in r.get_rebus_squares():
                         cell_value = r.get_rebus_solution(i)
                 # Circles
-                stylespec = {}
+                style = {}
                 if pz.has_markup():
                     m = pz.markup()
                     if i in m.get_markup_squares():
-                        stylespec = {"shapebg": "circle"}
-                cell = Cell(x, y, solution=cell_value, isBlock=isBlock, styleSpec=stylespec)
+                        style = {"shapebg": "circle"}
+                cell = Cell(x, y, solution=cell_value, value=fill, isBlock=isBlock, style=style)
                 cells.append(cell)
                 i += 1
             #END for x
@@ -261,3 +272,50 @@ class Puzzle:
                 clues[i]['clues'].append(clue)
 
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
+    #END fromPuz()
+
+    def fromIPuz(self, puzFile):
+        ipz = ipuz.read_ipuzfile(puzFile)
+
+        # Metadata
+        ipz_md = ipz['metadata']
+        metadata = MetaData(ipz_md['kind'])
+        metadata.title = ipz_md.get('title')
+        metadata.author = ipz_md.get('author')
+        metadata.copyright = ipz_md.get('copyright')
+        metadata.notes = ipz_md.get('notes')
+        metadata.width = ipz_md.get('width')
+        metadata.height = ipz_md.get('height')
+
+        # Grid
+        cells = []
+        for c in ipz['grid']:
+            cell = Cell(c['x'], c['y'], solution=c.get('solution')
+                , value=c.get('value'), number=c.get('number')
+                , isBlock=c.get('isBlock'), isEmpty=c.get('isEmpty'), style=c.get('style', {}))
+            cells.append(cell)
+        #END for c
+        grid = Grid(cells)
+
+        # Clues
+        clues = []
+        # We use these if we don't have explicit clue cell values
+        if ipz['metadata'].get('noClueCells'):
+            cellLists = (grid.acrossEntries(), grid.downEntries())
+        else:
+            cellLists = ({}, {})
+        for i, cluelist in enumerate(ipz['clues']):
+            title = cluelist['title']
+            clues1 = cluelist['clues']
+            thisClues = []
+            for j, clue in enumerate(clues1):
+                number = clue.get('number')
+                # Infer cell locations if they're not given
+                cells = clue.get('cells', cellLists[i].get(number))
+                c = Clue(clue.get('clue'), cells, number=number)
+                thisClues.append(c)
+            #END for clues1
+            clues.append({'title': title, 'clues': thisClues})
+        #END for cluelists
+        return Puzzle(metadata=metadata, grid=grid, clues=clues)
+    #END fromIPuz()
