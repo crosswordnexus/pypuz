@@ -34,7 +34,10 @@ class Cell:
         self.y = y
         self.solution = solution
         self.value = value
-        self.number = str(number)
+        if number:
+            self.number = str(number)
+        else:
+            self.number = None
         self.isBlock = isBlock
         self.isEmpty = isEmpty
         self.style = style
@@ -120,7 +123,7 @@ class Grid:
             thisNumbers = []
             for x in range(self.width):
                 if self.startAcrossWord(x, y) or self.startDownWord(x, y):
-                    self.cellAt(x, y).number = thisNumber
+                    self.cellAt(x, y).number = str(thisNumber)
                     thisNumber += 1
                 #END if
             #END for x
@@ -184,6 +187,8 @@ class Clue:
         self.cells = cells
         if number is not None:
             self.number = str(number)
+        else:
+            self.number = None
 
     def __repr__(self):
         return self.clue
@@ -295,8 +300,10 @@ class Puzzle:
         # Clues
         clues = []
         # We use these if we don't have explicit clue cell values
-        cellLists = (grid.acrossEntries(), grid.downEntries())
-        print(cellLists)
+        if ipz['metadata'].get('noClueCells'):
+            cellLists = (grid.acrossEntries(), grid.downEntries())
+        else:
+            cellLists = ({}, {})
         for i, cluelist in enumerate(ipz['clues']):
             title = cluelist['title']
             clues1 = cluelist['clues']
@@ -304,7 +311,7 @@ class Puzzle:
             for j, clue in enumerate(clues1):
                 number = clue.get('number')
                 # Infer cell locations if they're not given
-                cells = clue.get('cells', cellLists[i][number])
+                cells = clue.get('cells', cellLists[i].get(number))
                 c = Clue(clue.get('clue'), cells, number=number)
                 thisClues.append(c)
             #END for clues1
