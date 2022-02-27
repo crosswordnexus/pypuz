@@ -57,9 +57,10 @@ def read_ipuzfile(f):
                 elif ipuzcell is None:
                     cell['isEmpty'] = True
                 elif ipuzcell != EMPTY:
-                    cell['number'] = ipuzcell
+                    cell['number'] = str(ipuzcell)
                 try:
-                    cell['solution'] = ipuzdata['solution'][y][x]
+                    if ipuzcell != BLOCK and ipuzcell is not None:
+                        cell['solution'] = ipuzdata['solution'][y][x]
                 except: # no solution
                     pass
             # case 2: we have a dictionary
@@ -70,12 +71,13 @@ def read_ipuzfile(f):
                 elif icell is None:
                     cell['isEmpty'] = True
                 elif icell != EMPTY:
-                    cell['number'] = icell
+                    cell['number'] = str(icell)
                 cell['style'] = ordereddict_to_dict(ipuzcell.get('style', {}))
                 if ipuzcell.get('value'):
                     cell['value'] = ipuzcell.get('value')
                 try:
-                    cell['solution'] = ipuzdata['solution'][y][x]
+                    if icell != BLOCK and icell is not None:
+                        cell['solution'] = ipuzdata['solution'][y][x]
                 except: # no solution
                     pass
                 #END try
