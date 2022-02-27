@@ -1,4 +1,4 @@
-from file_types import puz
+from file_types import puz, ipuz
 import json
 CROSSWORD_TYPE = 'crossword'
 
@@ -34,7 +34,7 @@ class Cell:
         self.y = y
         self.solution = solution
         self.value = value
-        self.number = number
+        self.number = str(number)
         self.isBlock = isBlock
         self.isEmpty = isEmpty
         self.style = style
@@ -46,7 +46,7 @@ class Grid:
     """
     Class for a crossword grid
     """
-    # here "solution" is a list of Cell objects
+    # here "cells" is a list of Cell objects
     def __init__(self, cells):
         self.cells = cells
         self.height = max(c.y for c in cells) + 1
@@ -182,7 +182,8 @@ class Clue:
     def __init__(self, clue, cells, number=None):
         self.clue = clue
         self.cells = cells
-        self.number = number
+        if number is not None:
+            self.number = str(number)
 
     def __repr__(self):
         return self.clue
@@ -266,3 +267,48 @@ class Puzzle:
                 clues[i]['clues'].append(clue)
 
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
+    #END fromPuz()
+
+    def fromIPuz(self, puzFile):
+        ipz = ipuz.read_ipuzfile(puzFile)
+
+        # Metadata
+        ipz_md = ipz['metadata']
+        metadata = MetaData(ipz_md['kind'])
+        metadata.title = ipz_md.get('title')
+        metadata.author = ipz_md.get('author')
+        metadata.copyright = ipz_md.get('copyright')
+        metadata.notes = ipz_md.get('notes')
+        metadata.width = ipz_md.get('width')
+        metadata.height = ipz_md.get('height')
+
+        # Grid
+        cells = []
+        for c in ipz['grid']:
+            cell = Cell(c['x'], c['y'], solution=c.get('solution')
+                , value=c.get('value'), number=c.get('number')
+                , isBlock=c.get('isBlock'), isEmpty=c.get('isEmpty'), style=c.get('style', {}))
+            cells.append(cell)
+        #END for c
+        grid = Grid(cells)
+
+        # Clues
+        clues = []
+        # We use these if we don't have explicit clue cell values
+        cellLists = (grid.acrossEntries(), grid.downEntries())
+        print(cellLists)
+        for i, cluelist in enumerate(ipz['clues']):
+            title = cluelist['title']
+            clues1 = cluelist['clues']
+            thisClues = []
+            for j, clue in enumerate(clues1):
+                number = clue.get('number')
+                # Infer cell locations if they're not given
+                cells = clue.get('cells', cellLists[i][number])
+                c = Clue(clue.get('clue'), cells, number=number)
+                thisClues.append(c)
+            #END for clues1
+            clues.append({'title': title, 'clues': thisClues})
+        #END for cluelists
+        return Puzzle(metadata=metadata, grid=grid, clues=clues)
+    #END fromIPuz()
