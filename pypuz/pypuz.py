@@ -265,7 +265,7 @@ class Puzzle:
         clues = [ {'title': 'Across', 'clues': []}, {'title': 'Down', 'clues': []} ]
         for i, clueList in enumerate(allClues):
             for c in clueList:
-                number = c['num']
+                number = str(c['num'])
                 clue = c['clue']
                 cells = adEntries[i][number]['cells']
                 clue = Clue(clue=clue, cells=cells, number=number)
