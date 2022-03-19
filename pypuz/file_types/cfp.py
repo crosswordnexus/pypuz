@@ -51,7 +51,8 @@ def read_cfpfile(f):
     # We'll need the width and height later
     grid1 = cfpdata['GRID']
     width = int(grid1['@width'])
-    soln_arr = grid1['#text'].split('\n')
+    grid_text = grid1['#text']
+    soln_arr = grid_text.split('\n')
     height = len(soln_arr)
     ret['metadata'] = {
       'kind': kind
@@ -62,51 +63,27 @@ def read_cfpfile(f):
     , 'width': width
     , 'height': height
     }
+    
+    # Read in rebus info, if available
+    rebus1 = cfpdata.get('REBUSES', {})
+    rebus = dict()
+    for _, v in rebus1.items():
+        rebus[v['@input']] = v['@letters']
+        
+    # Circle info, if available
 
     # Get the grid
     grid = []
-    puzzle = ipuzdata['puzzle']
-    for y in range(height):
-        for x in range(width):
-            ipuzcell = puzzle[y][x]
-            cell = {'x': x, 'y': y}
-            # case 1: we have a string (or int)
-            if isinstance(ipuzcell, (str, int)):
-                # cast to string to be safe
-                ipuzcell = str(ipuzcell)
-                if ipuzcell == BLOCK:
-                    cell['isBlock'] = True
-                elif ipuzcell is None:
-                    cell['isEmpty'] = True
-                elif ipuzcell != EMPTY:
-                    cell['number'] = str(ipuzcell)
-                try:
-                    if ipuzcell != BLOCK and ipuzcell is not None:
-                        cell['solution'] = ipuzdata['solution'][y][x]
-                except: # no solution
-                    pass
-            # case 2: we have a dictionary
-            else:
-                icell = ipuzcell.get('cell', EMPTY)
-                if icell == BLOCK:
-                    cell['isBlock'] = True
-                elif icell is None:
-                    cell['isEmpty'] = True
-                elif icell != EMPTY:
-                    cell['number'] = str(icell)
-                cell['style'] = ordereddict_to_dict(ipuzcell.get('style', {}))
-                if ipuzcell.get('value'):
-                    cell['value'] = ipuzcell.get('value')
-                try:
-                    if icell != BLOCK and icell is not None:
-                        cell['solution'] = ipuzdata['solution'][y][x]
-                except: # no solution
-                    pass
-                #END try
-            #END if/else
-            grid.append(cell)
-        #END for x
-    #END for y
+    for i, letter in enumerate(grid_text.replace('\n', '')):
+        y = i // width
+        x = i % width
+        cell_value = rebus.get(letter, letter)
+        fill = None
+        # black squares
+        if cell_value == '.':
+            cell_value, isBlock = None, True
+        
+        
     ret['grid'] = grid
 
     ## Clues ##
