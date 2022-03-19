@@ -71,52 +71,35 @@ def read_cfpfile(f):
         rebus[v['@input']] = v['@letters']
         
     # Circle info, if available
+    circles1 = cfpdata.get('CIRCLES', '-1')
+    circles = set(map(int, circles1.split(',')))
+    
 
     # Get the grid
     grid = []
     for i, letter in enumerate(grid_text.replace('\n', '')):
         y = i // width
         x = i % width
+        cell = {'x': x, 'y': y, 'value': None}
         cell_value = rebus.get(letter, letter)
-        fill = None
         # black squares
         if cell_value == '.':
-            cell_value, isBlock = None, True
-        
-        
+            cell_value = None
+            cell['isBlock'] = True
+        cell['solution'] = cell_value
+        # circles
+        style = {}
+        if i in circles:
+            cell['style'] = {"shapebg": "circle"}
+        grid.append(cell)
     ret['grid'] = grid
 
     ## Clues ##
-    # Clues don't always come with explicit cell locations, which is unfortunate
-    # but we'll handle that in post, so to speak
-    ret_clues = []
-    # The way clues are set up, it can either be a list or a dictionary
-    for title, clues in ipuzdata.get('clues', {}).items():
-        #[ {'title': 'Across', 'clues': [...], 'title': 'Down', 'clues': [...]} ]
-        thisClues = []
-        for clue1 in clues:
-            if isinstance(clue1, list):
-                # Indicate in the metadata that we are not given explicit cells
-                ret['metadata']['noClueCells'] = True
-                number, clue = clue1
-                thisClues.append({'number': number, 'clue': clue})
-            else:
-                number = clue1.get('number', '')
-                clue = clue1.get('clue', '')
-                # cells are 1-indexed unfortunately
-                cells1 = clue1['cells']
-                cells = []
-                for cell in cells1:
-                    cells.append([cell[0]-1, cell[1]-1])
-                thisClues.append({'number': number, 'clue': clue, 'cells': cells})
-            #END if/else
-        #END for clue1
-        ret_clues.append({'title': title, 'clues': thisClues})
-    #END for title/clues
-    ## Hack for CrossFire-exported iPuz files ##
-    if len(ret_clues) == 2:
-        if ret_clues[0]['title'].lower() == 'down' and ret_clues[1]['title'].lower() == 'across':
-            ret_clues = [ret_clues[1], ret_clues[0]]
-    #END hack
+    ret_clues = [{'title': 'Across', 'clues': []}, {'title': 'Down', 'clues': []}]
+    for c in cfpdata.get('WORDS', {}).get('WORD', []):
+        # {'number': number, 'clue': clue}
+        clue = {'number': c.get('@num', ''), 'clue': c.get('#text', '')}
+        this_ix = int(c['@dir'].lower() == 'down')
+        ret_clues[this_ix]['clues'].append(clue)
     ret['clues'] = ret_clues
     return ret
