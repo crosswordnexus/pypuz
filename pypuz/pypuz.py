@@ -1,4 +1,4 @@
-from file_types import puz, ipuz, cfp
+from file_types import puz, ipuz, cfp, jpz
 import json
 CROSSWORD_TYPE = 'crossword'
 
@@ -365,5 +365,46 @@ class Puzzle:
         #END for cluelists
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
         
+    def fromJPZ(self, puzFile):
+        jpzdata = jpz.read_jpzfile(f)
+        
+        # Metadata
+        cfp_md = jpzdata['metadata']
+        metadata = MetaData(cfp_md['kind'])
+        metadata.title = cfp_md.get('title')
+        metadata.author = cfp_md.get('author')
+        metadata.copyright = cfp_md.get('copyright')
+        metadata.notes = cfp_md.get('notes')
+        metadata.width = cfp_md.get('width')
+        metadata.height = cfp_md.get('height')
+        
+        # Grid
+        cells = []
+        for c in jpzdata['grid']:
+            cell = Cell(c['x'], c['y'], solution=c.get('solution')
+                , value=c.get('value'), number=c.get('number')
+                , isBlock=c.get('isBlock'), isEmpty=c.get('isEmpty'), style=c.get('style', {}))
+            cells.append(cell)
+        #END for c
+        grid = Grid(cells)
+        
+        # Clues
+        clues = []
+        # We don't have explicit clue cell values
+        cellLists = (grid.acrossEntries(), grid.downEntries())
+        for i, cluelist in enumerate(jpzdata['clues']):
+            title = cluelist['title']
+            clues1 = cluelist['clues']
+            thisClues = []
+            for j, clue in enumerate(clues1):
+                number = clue.get('number')
+                # Infer cell locations if they're not given
+                cells = clue.get('cells', cellLists[i].get(number))
+                c = Clue(clue.get('clue'), cells, number=number)
+                thisClues.append(c)
+            #END for clues1
+            clues.append({'title': title, 'clues': thisClues})
+        #END for cluelists
+        return Puzzle(metadata=metadata, grid=grid, clues=clues)
         
         
