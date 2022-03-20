@@ -97,6 +97,14 @@ def read_jpzfile(f):
         value = c.get('@solve-state')
         solution = c.get('@solution')
         number = c.get('@number')
+        # if there's a hint, we show the letter
+        if c.get('@hint'):
+            value = solution
+        
+        # TODO: what do we do with "clue" cells?
+        if c.get('@type') == 'clue':
+            value = solution
+        
         if value:
             cell['value'] = value
         if solution:
@@ -110,7 +118,7 @@ def read_jpzfile(f):
         elif c.get('@type') == 'void':
             cell['isEmpty'] = True
         ## STYLE ##
-        # lots of possibilities for style, these are TODO
+        # TODO: lots of possibilities for style
         # for now, just focus on a few
         style = {}
         # circle
@@ -138,17 +146,69 @@ def read_jpzfile(f):
     ## Clues ##
     # in a jpz, "clues" are separate from "words"
     # so we'll have to handle both
+    
+    # Words first
+    # helper function to get cell values from "x" and "y" strings
+    def cells_from_xy(x, y):
+        word_cells = []
+        split_x = x.split('-')
+        split_y = y.split('-')
+        if len(split_x) > 1:
+            x_from, x_to = map(int, split_x)
+            y1 = int(split_y[0])
+            step = 1
+            if x_to < x_from:
+                step = -1
+            for k in range(x_from, x_to + step, step):
+                word_cells.append([k-1, y1-1])
+        elif len(split_y) > 1:
+            y_from, y_to = map(int, split_y)
+            x1 = int(split_x[0])
+            step = 1
+            if y_to < y_from:
+                step = -1
+            for k in range(y_from, y_to + step, step):
+                word_cells.append([x1-1, k-1])
+        else:
+            word_cells.append([int(split_x[0])-1, int(split_y[0])-1])
+        return word_cells
+    
     words = dict()
     for w in puzzle['word']:
         _id = w['@id']
+        x = w.get('@x')
+        y = w.get('@y')
         cells = []
-        for c in w['cells']:
-            
-    ret_clues = [{'title': 'Across', 'clues': []}, {'title': 'Down', 'clues': []}]
-    for c in cfpdata.get('WORDS', {}).get('WORD', []):
-        # {'number': number, 'clue': clue}
-        clue = {'number': c.get('@num', ''), 'clue': c.get('#text', '')}
-        this_ix = int(c['@dir'].lower() == 'down')
-        ret_clues[this_ix]['clues'].append(clue)
-    ret['clues'] = ret_clues
+        if x and y:
+            cells = cells_from_xy(x, y)
+        else:
+            wc = w.get('cells')
+            for xy in wc:
+                _x, _y = xy.get('@x'), xy.get('@y')
+                new_cells = cells_from_xy(_x, _y)
+                cells.extend(new_cells)
+        words[_id] = cells
+        
+    # Now clues for real
+    clues = []
+    # no clues in a coded crossword
+    if crossword_type != 'coded':
+        clues1 = puzzle['clues']
+        if type(clues1) != list:
+            clues1 = [clues1]
+        for clue_list in clues1:
+            clue_el_title = clue_list.get('title')
+            if isinstance(clue_el_title, OrderedDict):
+                clue_el_title = list(clue_el_title.values())[0]
+            clue_el_clues = clue_list.get('clue', [])
+            this_clues = {'title': clue_el_title, 'clues': []}
+            for c in clue_el_clues:
+                number = c.get('@number')
+                word_id = c.get('@word')
+                clue_text = c.get('#text')
+                cells = words[word_id]
+                this_clues['clues'].append({'number': number, 'clue': clue_text, 'cells': cells})
+            clues.append(this_clues)
+    
+    ret['clues'] = clues
     return ret
