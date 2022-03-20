@@ -387,8 +387,6 @@ class Puzzle:
             cells.append(cell)
         #END for c
         grid = Grid(cells)
-        # Set the numbering
-        grid.setNumbering()
         
         # Clues
         clues = []

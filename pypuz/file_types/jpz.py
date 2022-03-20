@@ -93,7 +93,7 @@ def read_jpzfile(f):
     for c in grid1['cell']:
         y = int(c['@y'])
         x = int(c['@x'])
-        cell = {'x': x, 'y': y}
+        cell = {'x': x-1, 'y': y-1}
         value = c.get('@solve-state')
         solution = c.get('@solution')
         number = c.get('@number')
