@@ -3,30 +3,44 @@ import re
 from collections import OrderedDict, defaultdict
 import xml.etree.ElementTree as ET
 import zipfile
+import lxml
+
+# via https://stackoverflow.com/a/51972010
+def cleanup_namespaces(input_xml):
+    """Remove the stupid namespaces"""
+    root = lxml.etree.fromstring(input_xml)
+
+    # Iterate through all XML elements
+    for elem in root.getiterator():
+        # Skip comments and processing instructions,
+        # because they do not have names
+        if not (
+            isinstance(elem, lxml.etree._Comment)
+            or isinstance(elem, lxml.etree._ProcessingInstruction)
+        ):
+            # Remove a namespace URI in the element's name
+            elem.tag = lxml.etree.QName(elem).localname
+    
+    # Remove unused namespace declarations
+    lxml.etree.cleanup_namespaces(root)
+    return lxml.etree.tostring(root).decode()
 
 # courtesy of https://stackoverflow.com/a/32842402
 def etree_to_ordereddict(t):
-    
-    # helper function to remove the namespace
-    def remove_ns(s):
-        return re.sub(r'^\{http.*?\}', '', s)
-    
     d = OrderedDict()
-    t_tag = remove_ns(t.tag)
-    d[remove_ns(t_tag)] = OrderedDict() if t.attrib else None
+    t_tag = t.tag
+    d[t_tag] = OrderedDict() if t.attrib else None
     children = list(t)
-    if children:
+    if children and t_tag != 'clue':
         dd = OrderedDict()
         for dc in map(etree_to_ordereddict, children):
-            for k, v in dc.items():
-                k1 = remove_ns(k)
+            for k1, v in dc.items():
                 if k1 not in dd:
                     dd[k1] = list()
                 dd[k1].append(v)
         d = OrderedDict()
         d[t_tag] = OrderedDict()
-        for k, v in dd.items():
-            k1 = remove_ns(k)
+        for k1, v in dd.items():
             if len(v) == 1:
                 d[t_tag][k1] = v[0]
             else:
@@ -40,6 +54,8 @@ def etree_to_ordereddict(t):
                 d[t_tag]['#text'] = text
         else:
             d[t_tag] = text
+    elif t_tag == 'clue':
+        d[t_tag]['#text'] = ''.join([ET.tostring(_).decode('utf-8') for _ in list(t)])
     return d
 
 
@@ -57,7 +73,7 @@ def read_jpzfile(f):
     except zipfile.BadZipFile:
         with open(f, 'r') as fid:
             xml = fid.read()
-    tree = ET.XML(xml)
+    tree = ET.XML(cleanup_namespaces(xml))
     jpzdata = etree_to_ordereddict(tree)
     # Take the root node (whatever it is)
     jpzdata = jpzdata[list(jpzdata.keys())[0]]
