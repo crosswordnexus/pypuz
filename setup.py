@@ -1,13 +1,11 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    name='PyPUZ',
+    name='pypuz',
     version='0.1.0',
     author='Alex Boisvert et al.',
     author_email='crosswordnexus@gmail.com',
-    packages=['pypuz'],
-    py_modules=['pypuz'],
-    scripts=[],
+    packages=find_packages(),
     #url='http://pypi.python.org/pypi/PackageName/',
     license='LICENSE.txt',
     description='Reading and writing crossword files in Python',
