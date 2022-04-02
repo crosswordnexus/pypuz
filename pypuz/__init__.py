@@ -1,1 +1,1 @@
-from pypuz import Puzzle
+from .pypuz import Puzzle
