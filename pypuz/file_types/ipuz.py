@@ -104,12 +104,17 @@ def read_ipuzfile(f):
             else:
                 number = clue1.get('number', '')
                 clue = clue1.get('clue', '')
-                # cells are 1-indexed unfortunately
-                cells1 = clue1['cells']
-                cells = []
-                for cell in cells1:
-                    cells.append([cell[0]-1, cell[1]-1])
-                thisClues.append({'number': number, 'clue': clue, 'cells': cells})
+                if 'cells' in clue1.keys():
+                    # cells are 1-indexed unfortunately
+                    cells1 = clue1['cells']
+                    cells = []
+                    for cell in cells1:
+                        cells.append([cell[0]-1, cell[1]-1])
+                    thisClues.append({'number': number, 'clue': clue, 'cells': cells})
+                else:
+                    # if no clue cells we'll have to infer them
+                    ret['metadata']['noClueCells'] = True
+                    thisClues.append({'number': number, 'clue': clue})
             #END if/else
         #END for clue1
         ret_clues.append({'title': title, 'clues': thisClues})
