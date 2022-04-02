@@ -1,4 +1,4 @@
-from file_types import puz, ipuz, cfp, jpz
+from .file_types import puz, ipuz, cfp, jpz
 import json
 CROSSWORD_TYPE = 'crossword'
 
@@ -319,11 +319,11 @@ class Puzzle:
         #END for cluelists
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
     #END fromIPuz()
-    
-    
+
+
     def fromCFP(self, puzFile):
         cfpdata = cfp.read_cfpfile(f)
-        
+
         # Metadata
         cfp_md = cfpdata['metadata']
         metadata = MetaData(cfp_md['kind'])
@@ -333,7 +333,7 @@ class Puzzle:
         metadata.notes = cfp_md.get('notes')
         metadata.width = cfp_md.get('width')
         metadata.height = cfp_md.get('height')
-        
+
         # Grid
         cells = []
         for c in cfpdata['grid']:
@@ -345,7 +345,7 @@ class Puzzle:
         grid = Grid(cells)
         # Set the numbering
         grid.setNumbering()
-        
+
         # Clues
         clues = []
         # We don't have explicit clue cell values
@@ -364,10 +364,10 @@ class Puzzle:
             clues.append({'title': title, 'clues': thisClues})
         #END for cluelists
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
-        
+
     def fromJPZ(self, puzFile):
         jpzdata = jpz.read_jpzfile(f)
-        
+
         # Metadata
         cfp_md = jpzdata['metadata']
         metadata = MetaData(cfp_md['kind'])
@@ -377,7 +377,7 @@ class Puzzle:
         metadata.notes = cfp_md.get('notes')
         metadata.width = cfp_md.get('width')
         metadata.height = cfp_md.get('height')
-        
+
         # Grid
         cells = []
         for c in jpzdata['grid']:
@@ -387,7 +387,7 @@ class Puzzle:
             cells.append(cell)
         #END for c
         grid = Grid(cells)
-        
+
         # Clues
         clues = []
         # We don't have explicit clue cell values
@@ -406,5 +406,3 @@ class Puzzle:
             clues.append({'title': title, 'clues': thisClues})
         #END for cluelists
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
-        
-        
