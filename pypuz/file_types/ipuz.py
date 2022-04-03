@@ -111,9 +111,10 @@ def read_ipuzfile(f):
                 # Indicate in the metadata that we are not given explicit cells
                 ret['metadata']['noClueCells'] = True
                 number, clue = clue1
+                number = str(number)
                 thisClues.append({'number': number, 'clue': clue})
             else:
-                number = clue1.get('number', '')
+                number = str(clue1.get('number', ''))
                 clue = clue1.get('clue', '')
                 # cells are 1-indexed unfortunately
                 cells1 = clue1['cells']
