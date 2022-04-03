@@ -428,7 +428,7 @@ class Puzzle:
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
 
     def fromJPZ(self, puzFile):
-        jpzdata = jpz.read_jpzfile(f)
+        jpzdata = jpz.read_jpzfile(puzFile)
 
         # Metadata
         cfp_md = jpzdata['metadata']
