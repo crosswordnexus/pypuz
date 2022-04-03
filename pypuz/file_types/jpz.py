@@ -3,27 +3,27 @@ import re
 from collections import OrderedDict, defaultdict
 import xml.etree.ElementTree as ET
 import zipfile
-import lxml
+from lxml import etree
 
 # via https://stackoverflow.com/a/51972010
 def cleanup_namespaces(input_xml):
     """Remove the stupid namespaces"""
-    root = lxml.etree.fromstring(input_xml)
+    root = etree.fromstring(input_xml)
 
     # Iterate through all XML elements
     for elem in root.getiterator():
         # Skip comments and processing instructions,
         # because they do not have names
         if not (
-            isinstance(elem, lxml.etree._Comment)
-            or isinstance(elem, lxml.etree._ProcessingInstruction)
+            isinstance(elem, etree._Comment)
+            or isinstance(elem, etree._ProcessingInstruction)
         ):
             # Remove a namespace URI in the element's name
-            elem.tag = lxml.etree.QName(elem).localname
-    
+            elem.tag = etree.QName(elem).localname
+
     # Remove unused namespace declarations
-    lxml.etree.cleanup_namespaces(root)
-    return lxml.etree.tostring(root).decode()
+    etree.cleanup_namespaces(root)
+    return etree.tostring(root).decode('utf-8')
 
 # courtesy of https://stackoverflow.com/a/32842402
 def etree_to_ordereddict(t):
@@ -71,21 +71,21 @@ def read_jpzfile(f):
             with myzip.open(this_file) as fid:
                 xml = fid.read()
     except zipfile.BadZipFile:
-        with open(f, 'r') as fid:
+        with open(f, 'rb') as fid:
             xml = fid.read()
     tree = ET.XML(cleanup_namespaces(xml))
     jpzdata = etree_to_ordereddict(tree)
     # Take the root node (whatever it is)
     jpzdata = jpzdata[list(jpzdata.keys())[0]]
     jpzdata = jpzdata['rectangular-puzzle']
-    
+
     CROSSWORD_TYPES = ['crossword', 'coded', 'acrostic']
     crossword_type = 'crossword'
     for ct in CROSSWORD_TYPES:
         if ct in jpzdata.keys():
             crossword_type = ct
             break
-    
+
     # Collect metadata
     kind = crossword_type
     metadata = jpzdata['metadata']
@@ -96,14 +96,14 @@ def read_jpzfile(f):
     , 'copyright': metadata.get('copyright')
     , 'notes': metadata.get('description')
     }
-    
+
     puzzle = jpzdata[crossword_type]
     grid1 = puzzle['grid']
     width = int(grid1['@width'])
     height = int(grid1['@height'])
     ret['metadata']['width'] = width
     ret['metadata']['height'] = height
-    
+
     # Get the grid
     grid = []
     for c in grid1['cell']:
@@ -116,18 +116,18 @@ def read_jpzfile(f):
         # if there's a hint, we show the letter
         if c.get('@hint'):
             value = solution
-        
+
         # TODO: what do we do with "clue" cells?
         if c.get('@type') == 'clue':
             value = solution
-        
+
         if value:
             cell['value'] = value
         if solution:
             cell['solution'] = solution
         if number:
             cell['number'] = number
-        
+
         # black squares
         if c.get('@type') == 'block':
             cell['isBlock'] = True
@@ -153,16 +153,16 @@ def read_jpzfile(f):
         # top right numbers
         if c.get('@top-right-number'):
             style['mark'] = {"TR": c.get('@top-right-number')}
-        
+
         cell['style'] = style
-             
+
         grid.append(cell)
     ret['grid'] = grid
 
     ## Clues ##
     # in a jpz, "clues" are separate from "words"
     # so we'll have to handle both
-    
+
     # Words first
     # helper function to get cell values from "x" and "y" strings
     def cells_from_xy(x, y):
@@ -188,7 +188,7 @@ def read_jpzfile(f):
         else:
             word_cells.append([int(split_x[0])-1, int(split_y[0])-1])
         return word_cells
-    
+
     words = dict()
     for w in puzzle['word']:
         _id = w['@id']
@@ -204,7 +204,7 @@ def read_jpzfile(f):
                 new_cells = cells_from_xy(_x, _y)
                 cells.extend(new_cells)
         words[_id] = cells
-        
+
     # Now clues for real
     clues = []
     # no clues in a coded crossword
@@ -225,6 +225,6 @@ def read_jpzfile(f):
                 cells = words[word_id]
                 this_clues['clues'].append({'number': number, 'clue': clue_text, 'cells': cells})
             clues.append(this_clues)
-    
+
     ret['clues'] = clues
     return ret
