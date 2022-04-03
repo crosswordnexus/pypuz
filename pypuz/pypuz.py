@@ -1,5 +1,8 @@
 from .file_types import puz, ipuz, cfp, jpz
 import json
+import itertools
+from collections import OrderedDict
+
 CROSSWORD_TYPE = 'crossword'
 
 # Class for crossword metadata
@@ -144,7 +147,7 @@ class Grid:
                         acrossEntries[thisNum] = {'word': '', 'cells': []}
                 if not self.isBlack(x, y) and thisNum is not None:
                     letter = self.letterAt(x, y)
-                    acrossEntries[thisNum]['word'] += letter
+                    acrossEntries[thisNum]['word'] += letter or ''
                     acrossEntries[thisNum]['cells'].append([x, y])
                 # end the across entry if we hit an edge
                 if self.hasBlack(x, y, 'R'):
@@ -166,7 +169,7 @@ class Grid:
                         downEntries[thisNum] = {'word': '', 'cells': []}
                 if not self.isBlack(x, y) and thisNum is not None:
                     letter = self.letterAt(x, y)
-                    downEntries[thisNum]['word'] += letter
+                    downEntries[thisNum]['word'] += letter or ''
                     downEntries[thisNum]['cells'].append([x, y])
                 # end the down entry if we hit the bottom
                 if self.hasBlack(x, y, 'B'):
@@ -274,6 +277,65 @@ class Puzzle:
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
     #END fromPuz()
 
+    def toIPuz(self, filename):
+        """Write an iPuz file"""
+        d = {}
+        # Metadata first
+        d["version"] = "http://ipuz.org/v1"
+        ipuzkind = f"http://ipuz.org/{self.metadata.kind}#1"
+        d['kind'] = [ipuzkind]
+        for a in ('author', 'title', 'copyright', 'notes'):
+            d[a] = getattr(self.metadata, a, '')
+        # dimensions
+        d['dimensions'] = {"width": self.grid.width, "height": self.grid.height}
+        # we explicitly define "block" and "empty"
+        BLOCK, EMPTY = '#', '_'
+        d['block'] = BLOCK; d['empty'] = EMPTY
+        # puzzle and solution
+        puzzle, solution = [], []
+        for y in range(self.grid.height):
+            row, solrow = [], []
+            for x in range(self.grid.width):
+                c = self.grid.cellAt(x, y)
+                if c.isBlock:
+                    row.append(BLOCK)
+                elif c.isEmpty:
+                    row.append(None)
+                else:
+                    num = c.number or EMPTY
+                    row.append({"cell": num, "style": c.style})
+                solrow.append(c.solution)
+            #END for x
+            puzzle.append(row)
+            solution.append(solrow)
+        #END for y
+        d['puzzle'] = puzzle
+        # add a solution only if there is one
+        solset = set(list(itertools.chain(*solution)))
+        if not solset.issubset(set([BLOCK, None])):
+            d['solution'] = solution
+
+        # Take care of clues, remembering that they are 1-indexed
+        clues = OrderedDict()
+        for c1 in self.clues:
+            c1_arr = []
+            for c2 in c1['clues']:
+                thisClue = {"clue": c2.clue, "number": c2.number}
+                thisCells = []
+                for c3 in c2.cells:
+                    thisCells.append([c3[0]+1, c3[1]+1])
+                thisClue["cells"] = thisCells
+                c1_arr.append(thisClue)
+            #END for c2
+            clues[c1['title']] = c1_arr
+        #END for c1
+        d['clues'] = clues
+
+        # write the file
+        with open(filename, 'w') as fid:
+            json.dump(d, fid)
+    #END toIPuz
+
     def fromIPuz(self, puzFile):
         ipz = ipuz.read_ipuzfile(puzFile)
 
@@ -311,7 +373,7 @@ class Puzzle:
             for j, clue in enumerate(clues1):
                 number = clue.get('number')
                 # Infer cell locations if they're not given
-                cells = clue.get('cells', cellLists[i].get(number))
+                cells = clue.get('cells', cellLists[i][number]['cells'])
                 c = Clue(clue.get('clue'), cells, number=number)
                 thisClues.append(c)
             #END for clues1
@@ -357,7 +419,7 @@ class Puzzle:
             for j, clue in enumerate(clues1):
                 number = clue.get('number')
                 # Infer cell locations if they're not given
-                cells = clue.get('cells', cellLists[i].get(number))
+                cells = clue.get('cells', cellLists[i][number]['cells'])
                 c = Clue(clue.get('clue'), cells, number=number)
                 thisClues.append(c)
             #END for clues1
@@ -399,7 +461,7 @@ class Puzzle:
             for j, clue in enumerate(clues1):
                 number = clue.get('number')
                 # Infer cell locations if they're not given
-                cells = clue.get('cells', cellLists[i].get(number))
+                cells = clue.get('cells', cellLists[i][number]['cells'])
                 c = Clue(clue.get('clue'), cells, number=number)
                 thisClues.append(c)
             #END for clues1

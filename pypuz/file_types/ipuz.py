@@ -16,7 +16,7 @@ def read_ipuzfile(f):
     ret = dict()
     # Note that we need to load an OrderedDict
     # as the order of the keys is important
-    with open(f, 'r') as fid:
+    with open(f, encoding='utf-8') as fid:
         ipuzdata = json.load(fid, object_pairs_hook=OrderedDict)
 
     # Collect metadata
@@ -48,8 +48,11 @@ def read_ipuzfile(f):
         for x in range(width):
             ipuzcell = puzzle[y][x]
             cell = {'x': x, 'y': y}
+            # case 0: this is null
+            if ipuzcell is None:
+                cell['isEmpty'] = True
             # case 1: we have a string (or int)
-            if isinstance(ipuzcell, (str, int)):
+            elif isinstance(ipuzcell, (str, int)):
                 # cast to string to be safe
                 ipuzcell = str(ipuzcell)
                 if ipuzcell == BLOCK:
@@ -60,7 +63,10 @@ def read_ipuzfile(f):
                     cell['number'] = str(ipuzcell)
                 try:
                     if ipuzcell != BLOCK and ipuzcell is not None:
-                        cell['solution'] = ipuzdata['solution'][y][x]
+                        sol = ipuzdata['solution'][y][x]
+                        if isinstance(sol, (dict, OrderedDict)):
+                            sol = sol['value']
+                        cell['solution'] = sol
                 except: # no solution
                     pass
             # case 2: we have a dictionary
@@ -77,7 +83,12 @@ def read_ipuzfile(f):
                     cell['value'] = ipuzcell.get('value')
                 try:
                     if icell != BLOCK and icell is not None:
-                        cell['solution'] = ipuzdata['solution'][y][x]
+                        # we pull the solution value from the "solution"
+                        # this can either be a string or a dictionary
+                        sol = ipuzdata['solution'][y][x]
+                        if isinstance(sol, (dict, OrderedDict)):
+                            sol = sol['value']
+                        cell['solution'] = sol
                 except: # no solution
                     pass
                 #END try
@@ -100,9 +111,10 @@ def read_ipuzfile(f):
                 # Indicate in the metadata that we are not given explicit cells
                 ret['metadata']['noClueCells'] = True
                 number, clue = clue1
+                number = str(number)
                 thisClues.append({'number': number, 'clue': clue})
             else:
-                number = clue1.get('number', '')
+                number = str(clue1.get('number', ''))
                 clue = clue1.get('clue', '')
                 if 'cells' in clue1.keys():
                     # cells are 1-indexed unfortunately
