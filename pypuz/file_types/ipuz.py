@@ -16,7 +16,7 @@ def read_ipuzfile(f):
     ret = dict()
     # Note that we need to load an OrderedDict
     # as the order of the keys is important
-    with open(f, 'r') as fid:
+    with open(f, encoding='utf-8') as fid:
         ipuzdata = json.load(fid, object_pairs_hook=OrderedDict)
 
     # Collect metadata
