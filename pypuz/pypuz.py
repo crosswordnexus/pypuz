@@ -1,4 +1,4 @@
-from .file_types import puz, ipuz, cfp, jpz
+from .file_types import puz, ipuz, cfp, jpz, amuselabs
 import json
 import itertools
 from collections import OrderedDict
@@ -398,3 +398,8 @@ class Puzzle:
         jpzdata = jpz.read_jpzfile(puzFile)
         return Puzzle().fromDict(jpzdata)
     #END fromJPZ()
+
+    def fromAmuseLabs(self, s):
+        data = amuselabs.read_amuselabs_data(s)
+        return Puzzle().fromDict(data)
+    #END fromAmuseLabs()
