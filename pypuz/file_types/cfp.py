@@ -62,18 +62,19 @@ def read_cfpfile(f):
     , 'notes': cfpdata.get('NOTES')
     , 'width': width
     , 'height': height
+    , 'noClueCells': True
     }
-    
+
     # Read in rebus info, if available
     rebus1 = cfpdata.get('REBUSES', {})
     rebus = dict()
     for _, v in rebus1.items():
         rebus[v['@input']] = v['@letters']
-        
+
     # Circle info, if available
     circles1 = cfpdata.get('CIRCLES', '-1')
     circles = set(map(int, circles1.split(',')))
-    
+
 
     # Get the grid
     grid = []

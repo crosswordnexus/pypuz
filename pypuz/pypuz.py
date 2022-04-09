@@ -1,4 +1,4 @@
-from .file_types import puz, ipuz, cfp, jpz
+from .file_types import puz, ipuz, cfp, jpz, amuselabs
 import json
 import itertools
 from collections import OrderedDict
@@ -336,22 +336,24 @@ class Puzzle:
             json.dump(d, fid)
     #END toIPuz
 
-    def fromIPuz(self, puzFile):
-        ipz = ipuz.read_ipuzfile(puzFile)
-
+    def fromDict(self, d1):
+        """
+        our file_types folder creates standard dictionaries
+        this method creates a Puzzle instance from the dictionary
+        """
         # Metadata
-        ipz_md = ipz['metadata']
-        metadata = MetaData(ipz_md['kind'])
-        metadata.title = ipz_md.get('title')
-        metadata.author = ipz_md.get('author')
-        metadata.copyright = ipz_md.get('copyright')
-        metadata.notes = ipz_md.get('notes')
-        metadata.width = ipz_md.get('width')
-        metadata.height = ipz_md.get('height')
+        md = d1['metadata']
+        metadata = MetaData(md['kind'])
+        metadata.title = md.get('title')
+        metadata.author = md.get('author')
+        metadata.copyright = md.get('copyright')
+        metadata.notes = md.get('notes')
+        metadata.width = md.get('width')
+        metadata.height = md.get('height')
 
         # Grid
         cells = []
-        for c in ipz['grid']:
+        for c in d1['grid']:
             cell = Cell(c['x'], c['y'], solution=c.get('solution')
                 , value=c.get('value'), number=c.get('number')
                 , isBlock=c.get('isBlock'), isEmpty=c.get('isEmpty'), style=c.get('style', {}))
@@ -362,18 +364,18 @@ class Puzzle:
         # Clues
         clues = []
         # We use these if we don't have explicit clue cell values
-        if ipz['metadata'].get('noClueCells'):
+        if d1['metadata'].get('noClueCells'):
             cellLists = (grid.acrossEntries(), grid.downEntries())
         else:
             cellLists = ({}, {})
-        for i, cluelist in enumerate(ipz['clues']):
+        for i, cluelist in enumerate(d1['clues']):
             title = cluelist['title']
             clues1 = cluelist['clues']
             thisClues = []
             for j, clue in enumerate(clues1):
                 number = clue.get('number')
                 # Infer cell locations if they're not given
-                cells = clue.get('cells', cellLists[i][number]['cells'])
+                cells = clue.get('cells', cellLists[i].get(number, {}).get('cells'))
                 c = Clue(clue.get('clue'), cells, number=number)
                 thisClues.append(c)
             #END for clues1
@@ -382,89 +384,22 @@ class Puzzle:
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
     #END fromIPuz()
 
+    def fromIPuz(self, puzFile):
+        ipz = ipuz.read_ipuzfile(puzFile)
+        return Puzzle().fromDict(ipz)
+    #END fromIPuz()
 
     def fromCFP(self, puzFile):
-        cfpdata = cfp.read_cfpfile(f)
-
-        # Metadata
-        cfp_md = cfpdata['metadata']
-        metadata = MetaData(cfp_md['kind'])
-        metadata.title = cfp_md.get('title')
-        metadata.author = cfp_md.get('author')
-        metadata.copyright = cfp_md.get('copyright')
-        metadata.notes = cfp_md.get('notes')
-        metadata.width = cfp_md.get('width')
-        metadata.height = cfp_md.get('height')
-
-        # Grid
-        cells = []
-        for c in cfpdata['grid']:
-            cell = Cell(c['x'], c['y'], solution=c.get('solution')
-                , value=c.get('value'), number=c.get('number')
-                , isBlock=c.get('isBlock'), isEmpty=c.get('isEmpty'), style=c.get('style', {}))
-            cells.append(cell)
-        #END for c
-        grid = Grid(cells)
-        # Set the numbering
-        grid.setNumbering()
-
-        # Clues
-        clues = []
-        # We don't have explicit clue cell values
-        cellLists = (grid.acrossEntries(), grid.downEntries())
-        for i, cluelist in enumerate(cfpdata['clues']):
-            title = cluelist['title']
-            clues1 = cluelist['clues']
-            thisClues = []
-            for j, clue in enumerate(clues1):
-                number = clue.get('number')
-                # Infer cell locations if they're not given
-                cells = clue.get('cells', cellLists[i][number]['cells'])
-                c = Clue(clue.get('clue'), cells, number=number)
-                thisClues.append(c)
-            #END for clues1
-            clues.append({'title': title, 'clues': thisClues})
-        #END for cluelists
-        return Puzzle(metadata=metadata, grid=grid, clues=clues)
+        cfpdata = cfp.read_cfpfile(puzFile)
+        return Puzzle().fromDict(cfpdata)
+    #END fromCFP()
 
     def fromJPZ(self, puzFile):
         jpzdata = jpz.read_jpzfile(puzFile)
+        return Puzzle().fromDict(jpzdata)
+    #END fromJPZ()
 
-        # Metadata
-        cfp_md = jpzdata['metadata']
-        metadata = MetaData(cfp_md['kind'])
-        metadata.title = cfp_md.get('title')
-        metadata.author = cfp_md.get('author')
-        metadata.copyright = cfp_md.get('copyright')
-        metadata.notes = cfp_md.get('notes')
-        metadata.width = cfp_md.get('width')
-        metadata.height = cfp_md.get('height')
-
-        # Grid
-        cells = []
-        for c in jpzdata['grid']:
-            cell = Cell(c['x'], c['y'], solution=c.get('solution')
-                , value=c.get('value'), number=c.get('number')
-                , isBlock=c.get('isBlock'), isEmpty=c.get('isEmpty'), style=c.get('style', {}))
-            cells.append(cell)
-        #END for c
-        grid = Grid(cells)
-
-        # Clues
-        clues = []
-        # We don't have explicit clue cell values
-        cellLists = (grid.acrossEntries(), grid.downEntries())
-        for i, cluelist in enumerate(jpzdata['clues']):
-            title = cluelist['title']
-            clues1 = cluelist['clues']
-            thisClues = []
-            for j, clue in enumerate(clues1):
-                number = clue.get('number')
-                # Infer cell locations if they're not given
-                cells = clue.get('cells', cellLists[i][number]['cells'])
-                c = Clue(clue.get('clue'), cells, number=number)
-                thisClues.append(c)
-            #END for clues1
-            clues.append({'title': title, 'clues': thisClues})
-        #END for cluelists
-        return Puzzle(metadata=metadata, grid=grid, clues=clues)
+    def fromAmuseLabs(self, s):
+        data = amuselabs.read_amuselabs_data(s)
+        return Puzzle().fromDict(data)
+    #END fromAmuseLabs()
