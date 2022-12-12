@@ -3,6 +3,14 @@ import json
 import itertools
 from collections import OrderedDict
 
+# This imports the _module_ unidecode, which converts Unicode strings to
+# plain ASCII. The puz format, however, can accept Latin1, which is a larger
+# subset. So the second line tells the module to leave codepoints 128-256
+# untouched, then we import the _function_ unidecode.
+import unidecode
+unidecode.Cache[0] = [chr(c) if c > 127 else '' for c in range(256)]
+from unidecode import unidecode as unidecode_fxn
+
 CROSSWORD_TYPE = 'crossword'
 
 # Class for crossword metadata
@@ -227,7 +235,6 @@ class Puzzle:
         metadata.height = pz.height
 
         # Create the grid
-        # TODO: deal with circles and rebuses
         cells = []
         i = 0
         for y in range(metadata.height):
@@ -276,7 +283,100 @@ class Puzzle:
 
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
     #END fromPuz()
+    
+    def toPuz(self, filename):
+        """
+        Write a .puz file.
+        Because of limitations of the .puz format, this is lossy at best.
+        In rare cases this may result in a nonsense .puz file
+        99% of the time this should work.
+        
+        Many thanks to xword-dl for the bulk of this code.
+        """
+        pz = puz.Puzzle()
+        # Metadata
+        for a in ('author', 'title', 'copyright', 'notes'):
+            setattr(pz, a, getattr(self.metadata, a, ''))
+            
+        # Dimensions
+        pz.width, pz.height = self.grid.width, self.grid.height
+        
+        # Fill and solution
+        circled = [(c.x, c.y) for c in self.grid.cells if c.style.get('shapebg') == 'circle']
+        solution, fill, markup, rebus_board, rebus_index, rebus_table = '', '', b'', [], 0, ''
+        
+        for row_num in range(self.grid.height):
+            for col_num in range(self.grid.width):
+                cell = self.grid.cellAt(col_num, row_num)
+                if c.isBlock:
+                    solution += '.'
+                    fill += '.'
+                    markup += b'\x00'
+                    rebus_board.append(0)
+                elif len(c.solution) == 1:
+                    solution += c.solution
+                    fill += '-'
+                    markup += b'\x80' if (col_num, row_num) in circled else b'\x00'
+                    rebus_board.append(0)
+                else:
+                    solution += c.solution[0]
+                    fill += '-'
+                    rebus_board.append(rebus_index + 1)
+                    rebus_table += '{:2d}:{};'.format(rebus_index, c.solution)
+                    rebus_index += 1
+                #END if/else
+            #END for col_num
+        #END for row_num
+                    
+        pz.solution = solution
+        pz.fill = fill
+        
+        # Clues
+        # there *must* be an "across" and "down" here, else we throw an exception
+        all_clues = []
+        num_dirs_found = 0
+        for clue_list in self.clues:
+            if clue_list['title'].lower() == 'across':
+                num_dirs_found += 1
+                for c in clue_list['clues']:
+                    setattr(c, 'dir', 0)
+                    all_clues.append(c)
+            if clue_list['title'].lower() == 'down':
+                num_dirs_found += 1
+                for c in clue_list['clues']:
+                    setattr(c, 'dir', 1)
+                    all_clues.append(c)
+                
+        if num_dirs_found != 2:
+            raise(BaseException('Proper clue lists not found'))
+            
+        weirdass_puz_clue_sorting = sorted(all_clues, key=lambda c: (c.number, c.dir))
+        
+        clues = [c.clue for c in weirdass_puz_clue_sorting]
+        
+        normalized_clues = [unidecode_fxn(clue) for clue in clues]
+        pz.clues.extend(normalized_clues)
 
+        has_markup = b'\x80' in markup
+        has_rebus = any(rebus_board)
+
+        if has_markup:
+            pz.extensions[b'GEXT'] = markup
+            pz._extensions_order.append(b'GEXT')
+            pz.markup()
+
+        if has_rebus:
+            pz.extensions[b'GRBS'] = bytes(rebus_board)
+            pz.extensions[b'RTBL'] = rebus_table.encode(puz.ENCODING)
+            pz._extensions_order.extend([b'GRBS', b'RTBL'])
+            pz.rebus()
+        
+        # Save the file
+        pz.save(filename)
+        
+        return
+    #END toPuz()
+        
     def toIPuz(self, filename):
         """Write an iPuz file"""
         d = {}
