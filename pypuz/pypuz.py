@@ -307,7 +307,7 @@ class Puzzle:
         
         for row_num in range(self.grid.height):
             for col_num in range(self.grid.width):
-                cell = self.grid.cellAt(col_num, row_num)
+                c = self.grid.cellAt(col_num, row_num)
                 if c.isBlock:
                     solution += '.'
                     fill += '.'
@@ -350,7 +350,7 @@ class Puzzle:
         if num_dirs_found != 2:
             raise(BaseException('Proper clue lists not found'))
             
-        weirdass_puz_clue_sorting = sorted(all_clues, key=lambda c: (c.number, c.dir))
+        weirdass_puz_clue_sorting = sorted(all_clues, key=lambda c: (int(c.number), c.dir))
         
         clues = [c.clue for c in weirdass_puz_clue_sorting]
         
