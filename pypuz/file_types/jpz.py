@@ -197,12 +197,14 @@ def read_jpzfile(f):
         cells = []
         if x and y:
             cells = cells_from_xy(x, y)
-        else:
-            wc = w.get('cells')
-            for xy in wc:
-                _x, _y = xy.get('@x'), xy.get('@y')
-                new_cells = cells_from_xy(_x, _y)
-                cells.extend(new_cells)
+        # we might have x, y, *and* cells
+        wc = w.get('cells', [])
+        if isinstance(wc, OrderedDict):
+            wc = [wc]
+        for xy in wc:
+            _x, _y = xy.get('@x'), xy.get('@y')
+            new_cells = cells_from_xy(_x, _y)
+            cells.extend(new_cells)
         words[_id] = cells
 
     # Now clues for real
