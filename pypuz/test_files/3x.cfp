@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <CROSSFIRE>
 <VERSION>1</VERSION>
-<TITLE>asdf</TITLE>
-<AUTHOR>sdf</AUTHOR>
-<COPYRIGHT>© asdf</COPYRIGHT>
+<TITLE>Test Puzzle</TITLE>
+<AUTHOR>Alex Boisvert</AUTHOR>
+<COPYRIGHT>© 2022 Crossword Nexus. CC BY 2.0 License.</COPYRIGHT>
 <GRID width="3">
 .AB
 CDE
