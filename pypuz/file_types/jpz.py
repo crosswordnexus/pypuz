@@ -224,6 +224,9 @@ def read_jpzfile(f):
                 number = c.get('@number')
                 word_id = c.get('@word')
                 clue_text = c.get('#text')
+                fmt = c.get('@format')
+                if fmt:
+                    clue_text = f"{clue_text} ({fmt})"
                 cells = words[word_id]
                 this_clues['clues'].append({'number': number, 'clue': clue_text, 'cells': cells})
             clues.append(this_clues)
