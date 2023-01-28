@@ -43,7 +43,7 @@ class Cell:
     def __init__(self, x, y, solution=None, value=None, number=None, isBlock=None, isEmpty=None, style={}):
         self.x = x
         self.y = y
-        self.solution = solution
+        self.solution = solution.upper()
         self.value = value
         if number:
             self.number = str(number)
