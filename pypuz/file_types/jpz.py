@@ -190,7 +190,11 @@ def read_jpzfile(f):
         return word_cells
 
     words = dict()
-    for w in puzzle['word']:
+    # Account for the case where there's only one "word"
+    words_arr = puzzle['word']
+    if not isinstance(words_arr, list):
+        words_arr = [words_arr]
+    for w in words_arr:
         _id = w['@id']
         x = w.get('@x')
         y = w.get('@y')
@@ -219,6 +223,8 @@ def read_jpzfile(f):
             if isinstance(clue_el_title, OrderedDict):
                 clue_el_title = list(clue_el_title.values())[0]
             clue_el_clues = clue_list.get('clue', [])
+            if not isinstance(clue_el_clues, list):
+                clue_el_clues = [clue_el_clues]
             this_clues = {'title': clue_el_title, 'clues': []}
             for c in clue_el_clues:
                 number = c.get('@number')
