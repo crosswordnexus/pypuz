@@ -454,7 +454,7 @@ class Puzzle:
         # Grid
         cells = []
         for c in d1['grid']:
-            cell = Cell(c['x'], c['y'], solution=c.get('solution')
+            cell = Cell(c['x'], c['y'], solution=c.get('solution', '')
                 , value=c.get('value'), number=c.get('number')
                 , isBlock=c.get('isBlock'), isEmpty=c.get('isEmpty'), style=c.get('style', {}))
             cells.append(cell)
