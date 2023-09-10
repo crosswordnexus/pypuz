@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pypuz',
-    version='0.1.3',
+    version='2023.09.10.1',
     author='Alex Boisvert et al.',
     author_email='crosswordnexus@gmail.com',
     packages=find_packages(),
