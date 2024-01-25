@@ -404,7 +404,10 @@ class Puzzle:
                     row.append(None)
                 else:
                     num = c.number or EMPTY
-                    row.append({"cell": num, "style": c.style})
+                    this_cell = {"cell": num, "style": c.style}
+                    if c.value:
+                        this_cell["value"] = c.value
+                    row.append(this_cell)
                 solrow.append(c.solution)
             #END for x
             puzzle.append(row)
