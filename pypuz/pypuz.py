@@ -21,7 +21,7 @@ class MetaData:
     Mandatory components:
     kind (the puzzle type)
     Optional:
-    author, title, copyright, notes, width, height
+    author, title, copyright, notes, width, height, intro
     """
     def __init__(self, kind):
         self.kind = kind
@@ -43,7 +43,10 @@ class Cell:
     def __init__(self, x, y, solution=None, value=None, number=None, isBlock=None, isEmpty=None, style={}):
         self.x = x
         self.y = y
-        self.solution = solution.upper()
+        if solution:
+            self.solution = solution.upper()
+        else:
+            self.solution = None
         self.value = value
         if number:
             self.number = str(number)
@@ -283,28 +286,28 @@ class Puzzle:
 
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
     #END fromPuz()
-    
+
     def toPuz(self, filename):
         """
         Write a .puz file.
         Because of limitations of the .puz format, this is lossy at best.
         In rare cases this may result in a nonsense .puz file
         99% of the time this should work.
-        
+
         Many thanks to xword-dl for the bulk of this code.
         """
         pz = puz.Puzzle()
         # Metadata
         for a in ('author', 'title', 'copyright', 'notes'):
             setattr(pz, a, getattr(self.metadata, a, ''))
-            
+
         # Dimensions
         pz.width, pz.height = self.grid.width, self.grid.height
-        
+
         # Fill and solution
         circled = [(c.x, c.y) for c in self.grid.cells if c.style.get('shapebg') == 'circle']
         solution, fill, markup, rebus_board, rebus_index, rebus_table = '', '', b'', [], 0, ''
-        
+
         for row_num in range(self.grid.height):
             for col_num in range(self.grid.width):
                 c = self.grid.cellAt(col_num, row_num)
@@ -327,10 +330,10 @@ class Puzzle:
                 #END if/else
             #END for col_num
         #END for row_num
-                    
+
         pz.solution = solution
         pz.fill = fill
-        
+
         # Clues
         # there *must* be an "across" and "down" here, else we throw an exception
         all_clues = []
@@ -346,14 +349,14 @@ class Puzzle:
                 for c in clue_list['clues']:
                     setattr(c, 'dir', 1)
                     all_clues.append(c)
-                
+
         if num_dirs_found != 2:
             raise(BaseException('Proper clue lists not found'))
-            
+
         weirdass_puz_clue_sorting = sorted(all_clues, key=lambda c: (int(c.number), c.dir))
-        
+
         clues = [c.clue for c in weirdass_puz_clue_sorting]
-        
+
         normalized_clues = [unidecode_fxn(clue) for clue in clues]
         pz.clues.extend(normalized_clues)
 
@@ -370,13 +373,13 @@ class Puzzle:
             pz.extensions[b'RTBL'] = rebus_table.encode(puz.ENCODING)
             pz._extensions_order.extend([b'GRBS', b'RTBL'])
             pz.rebus()
-        
+
         # Save the file
         pz.save(filename)
-        
+
         return
     #END toPuz()
-        
+
     def toIPuz(self, filename):
         """Write an iPuz file"""
         d = {}
@@ -403,7 +406,10 @@ class Puzzle:
                     row.append(None)
                 else:
                     num = c.number or EMPTY
-                    row.append({"cell": num, "style": c.style})
+                    this_cell = {"cell": num, "style": c.style}
+                    if c.value:
+                        this_cell["value"] = c.value
+                    row.append(this_cell)
                 solrow.append(c.solution)
             #END for x
             puzzle.append(row)

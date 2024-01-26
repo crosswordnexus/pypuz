@@ -35,6 +35,7 @@ def read_ipuzfile(f):
     , 'notes': ipuzdata.get('notes')
     , 'width': width
     , 'height': height
+    , 'intro': ipuzdata.get('intro')
     }
 
     # Get the grid
