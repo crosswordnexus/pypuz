@@ -21,7 +21,7 @@ class MetaData:
     Mandatory components:
     kind (the puzzle type)
     Optional:
-    author, title, copyright, notes, width, height
+    author, title, copyright, notes, width, height, intro
     """
     def __init__(self, kind):
         self.kind = kind
