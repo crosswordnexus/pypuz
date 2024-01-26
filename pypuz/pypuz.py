@@ -45,6 +45,8 @@ class Cell:
         self.y = y
         if solution:
             self.solution = solution.upper()
+        else:
+            self.solution = None
         self.value = value
         if number:
             self.number = str(number)
