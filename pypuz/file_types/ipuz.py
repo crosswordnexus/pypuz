@@ -9,6 +9,37 @@ def ordereddict_to_dict(d):
     """
     return json.loads(json.dumps(d))
 
+def cell_offset(clues_obj: dict, height: int, width: int) -> int:
+    """
+    Decide whether clue cells are 0- or 1-based.
+    Returns offset (0 or 1) to subtract from coordinates.
+    """
+
+    if not clues_obj:
+        return 0
+
+    # Gather all coordinates
+    all_cells = []
+    for clue_list in clues_obj.values():
+        for clue in clue_list:
+            if "cells" in clue and clue["cells"]:
+                all_cells.extend(clue["cells"])
+
+    if not all_cells:
+        return 0  # irrelevant
+
+    def in_bounds(r: int, c: int) -> bool:
+        return 0 <= r < height and 0 <= c < width
+
+    any_invalid0 = any(not in_bounds(r, c) for r, c in all_cells)
+    any_invalid1 = any(not in_bounds(r - 1, c - 1) for r, c in all_cells)
+
+    if any_invalid0 and any_invalid1:
+        return 0   # invalid puzzle; fallback
+    if not any_invalid0 and not any_invalid1:
+        return 0   # unknown → stick with default
+    return 1 if any_invalid0 else 0
+
 def read_ipuzfile(f):
     """
     Read in an ipuz file, return a dictionary of data
@@ -103,6 +134,10 @@ def read_ipuzfile(f):
     # Clues don't always come with explicit cell locations, which is unfortunate
     # but we'll handle that in post, so to speak
     ret_clues = []
+
+    # Get the offset via our heuristic
+    offset = cell_offset(ipuzdata.get('clues', {}), height, width)
+
     # The way clues are set up, it can either be a list or a dictionary
     for title, clues in ipuzdata.get('clues', {}).items():
         #[ {'title': 'Across', 'clues': [...], 'title': 'Down', 'clues': [...]} ]
@@ -118,11 +153,10 @@ def read_ipuzfile(f):
                 number = str(clue1.get('number', ''))
                 clue = clue1.get('clue', '')
                 if 'cells' in clue1.keys():
-                    # cells are 1-indexed unfortunately
                     cells1 = clue1['cells']
                     cells = []
                     for cell in cells1:
-                        cells.append([cell[0]-1, cell[1]-1])
+                        cells.append([cell[0] - offset, cell[1] - offset])
                     thisClues.append({'number': number, 'clue': clue, 'cells': cells})
                 else:
                     # if no clue cells we'll have to infer them

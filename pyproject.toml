@@ -1,3 +1,14 @@
 [build-system]
 requires = ['setuptools>=42']
 build-backend = 'setuptools.build_meta'
+
+[tool.poetry]
+name = "pypuz"
+version = "2025.9.24"
+description = "Reading and writing crossword files in Python"
+authors = ["Alex Boisvert <crosswordnexus@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+lxml = ">=5.4.0"
+Unidecode = ">=1.4.0"

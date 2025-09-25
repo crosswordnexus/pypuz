@@ -3,6 +3,14 @@ import json
 import itertools
 from collections import OrderedDict
 
+# Get the current version
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("pypuz")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
+
 # This imports the _module_ unidecode, which converts Unicode strings to
 # plain ASCII. The puz format, however, can accept Latin1, which is a larger
 # subset. So the second line tells the module to leave codepoints 128-256
@@ -384,6 +392,7 @@ class Puzzle:
         """Write an iPuz file"""
         d = {}
         # Metadata first
+        d["origin"] = f"pypuz v{__version__}"
         d["version"] = "http://ipuz.org/v1"
         ipuzkind = f"http://ipuz.org/{self.metadata.kind}#1"
         d['kind'] = [ipuzkind]
