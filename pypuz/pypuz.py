@@ -105,6 +105,19 @@ class Grid:
     def letterAt(self, x, y):
         return self.cellAt(x, y).solution
 
+    def getWord(self, cells):
+        """
+        Return the word at a given list of cells
+        """
+        if not cells:
+            return None
+        res = ''
+        for x, y in cells:
+            c = self.cellAt(x, y)
+            if c and c.solution:
+                res += c.solution
+        return res
+
     # Return True if the cell at (x,y) is empty or a block
     def isBlack(self, x, y):
         thisCell = self.cellAt(x, y)
@@ -199,14 +212,16 @@ class Grid:
 class Clue:
     """
     The class for an individual clue
-    This has three components:
+    This has four components:
     * clue -- the actual clue
+    * answer -- the answer for the clue
     * number (optional) -- the number of the clue
     * cells -- the coordinates of the cells for the entry corresponding to the clue
     """
-    def __init__(self, clue, cells, number=None):
+    def __init__(self, clue, cells, number=None, answer=None):
         self.clue = clue
         self.cells = cells
+        self.answer = answer
         if number is not None:
             self.number = str(number)
         else:
@@ -289,7 +304,8 @@ class Puzzle:
                 number = str(c['num'])
                 clue = c['clue']
                 cells = adEntries[i][number]['cells']
-                clue = Clue(clue=clue, cells=cells, number=number)
+                answer = adEntries[i][number]['word']
+                clue = Clue(clue=clue, cells=cells, number=number, answer=answer)
                 clues[i]['clues'].append(clue)
 
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
@@ -435,7 +451,7 @@ class Puzzle:
         for c1 in self.clues:
             c1_arr = []
             for c2 in c1['clues']:
-                thisClue = {"clue": c2.clue, "number": c2.number}
+                thisClue = {"clue": c2.clue, "number": c2.number, "answer": c2.answer}
                 thisCells = []
                 for c3 in c2.cells:
                     thisCells.append([c3[0]+1, c3[1]+1])
@@ -490,8 +506,12 @@ class Puzzle:
             for j, clue in enumerate(clues1):
                 number = clue.get('number')
                 # Infer cell locations if they're not given
-                cells = clue.get('cells', cellLists[i].get(number, {}).get('cells'))
-                c = Clue(clue.get('clue'), cells, number=number)
+                res = cellLists[i].get(number, {})
+                cells = clue.get('cells', res.get('cells'))
+                answer = clue.get('answer', res.get('word'))
+                if answer is None:
+                    answer = grid.getWord(cells)
+                c = Clue(clue.get('clue'), cells, number=number, answer=answer)
                 thisClues.append(c)
             #END for clues1
             clues.append({'title': title, 'clues': thisClues})
