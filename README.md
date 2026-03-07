@@ -98,22 +98,35 @@ python tests/test_file_types.py
 
 ## Development
 
-To build the package:
+To install the package for development:
 ```bash
-poetry build
+poetry install
 ```
 
-To install locally (after build):
+To install locally from a build:
 ```bash
+poetry build
 pip install dist/pypuz-VERSION-py3-none-any.whl
 ```
 
-To upload to PyPI:
-```bash
-twine upload dist/*
-```
+## Releasing
 
-*Note: Remember to bump the version in `pyproject.toml` before making changes.*
+To make a new release of `pypuz`:
+
+1.  **Merge to Main**: Ensure all changes are merged into the `main` (or `master`) branch.
+2.  **Bump Version**: Update the `version` in `pyproject.toml` and document changes in `CHANGES.txt`.
+3.  **Tag the Release**: Create a Git tag for the version.
+    ```bash
+    git checkout main
+    git pull origin main
+    git tag -a v2026.3.7 -m "Release version 2026.3.7"
+    git push origin main --tags
+    ```
+4.  **Publish to PyPI**:
+    ```bash
+    poetry build
+    twine upload dist/*
+    ```
 
 ## License
 
