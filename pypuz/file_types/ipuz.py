@@ -11,8 +11,11 @@ def ordereddict_to_dict(d):
 
 def cell_offset(clues_obj: dict, height: int, width: int) -> int:
     """
-    Decide whether clue cells are 0- or 1-based.
-    Returns offset (0 or 1) to subtract from coordinates.
+    Decide whether clue cells are 0- or 1-based by checking if coordinates
+    are within grid boundaries.
+    
+    Returns:
+        int: offset (0 or 1) to subtract from coordinates.
     """
 
     if not clues_obj:
@@ -42,7 +45,13 @@ def cell_offset(clues_obj: dict, height: int, width: int) -> int:
 
 def read_ipuzfile(f):
     """
-    Read in an ipuz file, return a dictionary of data
+    Read in an ipuz file and return a standardized dictionary of data.
+    
+    Args:
+        f (str): Path to the .ipuz file.
+        
+    Returns:
+        dict: Standardized puzzle data including metadata, grid, and clues.
     """
     ret = dict()
     # Note that we need to load an OrderedDict
