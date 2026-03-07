@@ -38,15 +38,17 @@ class MetaData:
 # Class for a crossword cell
 class Cell:
     """
-    A crossword cell.
-    The only necessary components are x and y (the coordinates, 0-indexed).
-    Other possible components:
-    solution (string)
-    value (string -- the currently filled value of the cell)
-    number (string -- the number or letter in the top left)
-    isBlock (boolean -- set to True if the cell is a black square)
-    isEmpty (boolean -- set to True if the cell is a "void")
-    style (dictionary -- see the "StyleSpec" section on http://www.ipuz.org/)
+    Represents a single cell in a crossword grid.
+    
+    Attributes:
+        x (int): 0-indexed column position.
+        y (int): 0-indexed row position.
+        solution (str, optional): The correct letter for this cell.
+        value (str, optional): The current fill value of the cell.
+        number (str, optional): The clue number associated with this cell.
+        isBlock (bool, optional): True if this is a black square.
+        isEmpty (bool, optional): True if this is a "void" or non-playable cell.
+        style (dict, optional): Visual style information (e.g., circles, bars).
     """
     def __init__(self, x, y, solution=None, value=None, number=None, isBlock=None, isEmpty=None, style={}):
         self.x = x
@@ -69,7 +71,7 @@ class Cell:
 
 class Grid:
     """
-    Class for a crossword grid
+    Class for a crossword grid, representing the layout and cell content.
     """
     # here "cells" is a list of Cell objects
     def __init__(self, cells):
@@ -81,6 +83,10 @@ class Grid:
         return json.dumps(self.solutionArray())
 
     def solutionArray(self):
+        """
+        Return a 2D array representation of the grid's solution.
+        Blocks are represented by '#', empty cells by '_'.
+        """
         arr = []
         for y in range(self.height):
             row = []
@@ -95,23 +101,46 @@ class Grid:
             arr.append(row)
         return arr
 
-    # return the cell at (x,y)
     def cellAt(self, x, y):
+        """
+        Return the Cell object at the given (x, y) coordinates.
+        """
         for c in self.cells:
             if c.x == x and c.y == y:
                 return c
 
-    # Return the solution at (x, y)
     def letterAt(self, x, y):
+        """
+        Return the solution character at the given (x, y) coordinates.
+        """
         return self.cellAt(x, y).solution
 
-    # Return True if the cell at (x,y) is empty or a block
+    def getWord(self, cells):
+        """
+        Return the word formed by the solution letters in the given list of cell coordinates.
+        Useful for constructing clue answers from grid positions.
+        """
+        if not cells:
+            return None
+        res = ''
+        for x, y in cells:
+            c = self.cellAt(x, y)
+            if c and c.solution:
+                res += c.solution
+        return res
+
     def isBlack(self, x, y):
+        """
+        Return True if the cell at (x, y) is a black square or empty void.
+        """
         thisCell = self.cellAt(x, y)
         return (thisCell.isEmpty or thisCell.isBlock)
 
-    # check if we have a black square (or a bar) in a given direction
     def hasBlack(self, x, y, dir):
+        """
+        Check if there is a boundary (grid edge, black square, or bar) in the given direction.
+        Directions: 'R' (Right), 'L' (Left), 'T' (Top), 'B' (Bottom).
+        """
         mapping_dict = {
           'R': {'xcheck': self.width-1, 'xoffset': 1, 'yoffset': 0, 'dir2': 'L'}
         , 'L': {'xcheck': 0, 'xoffset': -1, 'yoffset': 0, 'dir2': 'R'}
@@ -131,15 +160,22 @@ class Grid:
         return False
     #END hasBlack
 
-    # Whether the coordinates are the starting letter for a word
-    # both startAcrossWord and startDownWord have to account for bars
     def startAcrossWord(self, x, y):
+        """
+        Determine if the cell at (x, y) is the start of an across word.
+        """
         return self.hasBlack(x, y, 'L') and not self.isBlack(x, y) and not self.hasBlack(x, y, 'R')
+
     def startDownWord(self, x, y):
+        """
+        Determine if the cell at (x, y) is the start of a down word.
+        """
         return self.hasBlack(x, y, 'T') and not self.isBlack(x, y) and not self.hasBlack(x, y, 'B')
 
-    # Set the default numbers
     def setNumbering(self):
+        """
+        Calculate and set the standard crossword numbering for the grid.
+        """
         thisNumber = 1
         for y in range(self.height):
             thisNumbers = []
@@ -152,8 +188,10 @@ class Grid:
         #END for y
     #END def gridNumbering
 
-    # Return the across entries (TODO)
     def acrossEntries(self):
+        """
+        Identify and return all across entries in the grid with their words and cell coordinates.
+        """
         # Set the numbering if it doesn't already exist
         self.setNumbering()
         acrossEntries = {}
@@ -174,8 +212,10 @@ class Grid:
         return acrossEntries
     #END acrossEntries()
 
-    # Return the down entries (TODO)
     def downEntries(self):
+        """
+        Identify and return all down entries in the grid with their words and cell coordinates.
+        """
         # Set the numbering if it doesn't already exist
         self.setNumbering()
         downEntries = {}
@@ -198,15 +238,18 @@ class Grid:
 
 class Clue:
     """
-    The class for an individual clue
-    This has three components:
-    * clue -- the actual clue
-    * number (optional) -- the number of the clue
-    * cells -- the coordinates of the cells for the entry corresponding to the clue
+    Represents an individual clue in a crossword.
+
+    Attributes:
+        clue (str): The text of the clue.
+        cells (list): List of [x, y] coordinates for the entry.
+        number (str, optional): The clue number.
+        answer (str, optional): The answer for the clue.
     """
-    def __init__(self, clue, cells, number=None):
+    def __init__(self, clue, cells, number=None, answer=None):
         self.clue = clue
         self.cells = cells
+        self.answer = answer
         if number is not None:
             self.number = str(number)
         else:
@@ -218,7 +261,7 @@ class Clue:
 
 class Puzzle:
     """
-    Class for a crossword
+    Primary class for a crossword puzzle, containing metadata, grid, and clues.
     """
     def __init__(self, metadata=None, grid=None, clues=None):
         # metadata is a MetaData class
@@ -230,6 +273,9 @@ class Puzzle:
         self.clues = clues
 
     def fromPuz(self, puzFile):
+        """
+        Load a puzzle from a .puz file.
+        """
         # Read in the file
         pz = puz.read(puzFile)
 
@@ -289,7 +335,8 @@ class Puzzle:
                 number = str(c['num'])
                 clue = c['clue']
                 cells = adEntries[i][number]['cells']
-                clue = Clue(clue=clue, cells=cells, number=number)
+                answer = adEntries[i][number]['word']
+                clue = Clue(clue=clue, cells=cells, number=number, answer=answer)
                 clues[i]['clues'].append(clue)
 
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
@@ -297,12 +344,8 @@ class Puzzle:
 
     def toPuz(self, filename):
         """
-        Write a .puz file.
-        Because of limitations of the .puz format, this is lossy at best.
-        In rare cases this may result in a nonsense .puz file
-        99% of the time this should work.
-
-        Many thanks to xword-dl for the bulk of this code.
+        Write the puzzle to a .puz file.
+        Note: The .puz format has limitations and some information may be lost.
         """
         pz = puz.Puzzle()
         # Metadata
@@ -389,7 +432,9 @@ class Puzzle:
     #END toPuz()
 
     def toIPuz(self, filename):
-        """Write an iPuz file"""
+        """
+        Write the puzzle to an .ipuz (JSON-based) file.
+        """
         d = {}
         # Metadata first
         d["origin"] = f"pypuz v{__version__}"
@@ -435,7 +480,7 @@ class Puzzle:
         for c1 in self.clues:
             c1_arr = []
             for c2 in c1['clues']:
-                thisClue = {"clue": c2.clue, "number": c2.number}
+                thisClue = {"clue": c2.clue, "number": c2.number, "answer": c2.answer}
                 thisCells = []
                 for c3 in c2.cells:
                     thisCells.append([c3[0]+1, c3[1]+1])
@@ -453,8 +498,8 @@ class Puzzle:
 
     def fromDict(self, d1):
         """
-        our file_types folder creates standard dictionaries
-        this method creates a Puzzle instance from the dictionary
+        Create a Puzzle instance from a standardized dictionary.
+        Internal method used by various file loaders.
         """
         # Metadata
         md = d1['metadata']
@@ -490,31 +535,67 @@ class Puzzle:
             for j, clue in enumerate(clues1):
                 number = clue.get('number')
                 # Infer cell locations if they're not given
-                cells = clue.get('cells', cellLists[i].get(number, {}).get('cells'))
-                c = Clue(clue.get('clue'), cells, number=number)
+                res = cellLists[i].get(number, {})
+                cells = clue.get('cells', res.get('cells'))
+                answer = clue.get('answer', res.get('word'))
+                if answer is None:
+                    answer = grid.getWord(cells)
+                c = Clue(clue.get('clue'), cells, number=number, answer=answer)
                 thisClues.append(c)
             #END for clues1
             clues.append({'title': title, 'clues': thisClues})
         #END for cluelists
         return Puzzle(metadata=metadata, grid=grid, clues=clues)
-    #END fromIPuz()
+    #END fromDict()
 
     def fromIPuz(self, puzFile):
+        """
+        Load a puzzle from an .ipuz file.
+        """
         ipz = ipuz.read_ipuzfile(puzFile)
         return Puzzle().fromDict(ipz)
     #END fromIPuz()
 
     def fromCFP(self, puzFile):
+        """
+        Load a puzzle from a .cfp (CrossFire) file.
+        """
         cfpdata = cfp.read_cfpfile(puzFile)
         return Puzzle().fromDict(cfpdata)
     #END fromCFP()
 
     def fromJPZ(self, puzFile):
+        """
+        Load a puzzle from a .jpz file.
+        """
         jpzdata = jpz.read_jpzfile(puzFile)
         return Puzzle().fromDict(jpzdata)
     #END fromJPZ()
 
-    def fromAmuseLabs(self, s):
+def fromAmuseLabs(self, s):
+        """
+        Load a puzzle from AmuseLabs data.
+        """
         data = amuselabs.read_amuselabs_data(s)
         return Puzzle().fromDict(data)
     #END fromAmuseLabs()
+
+def load(filename):
+    """
+    Load a puzzle from a file, automatically detecting the format based on the extension.
+    
+    Supported extensions: .puz, .ipuz, .jpz, .cfp, .xml (treated as JPZ)
+    """
+    import os
+    ext = os.path.splitext(filename)[1].lower()
+    p = Puzzle()
+    if ext == '.puz':
+        return p.fromPuz(filename)
+    elif ext == '.ipuz':
+        return p.fromIPuz(filename)
+    elif ext == '.jpz' or ext == '.xml':
+        return p.fromJPZ(filename)
+    elif ext == '.cfp':
+        return p.fromCFP(filename)
+    else:
+        raise ValueError(f"Unsupported file extension: {ext}")
