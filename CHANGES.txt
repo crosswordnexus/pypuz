@@ -1,1 +1,10 @@
-2025.9.24 -- Add heuristic for 0-offset iPuz files
+2026.3.7
+----------
+* Added unified `pypuz.load(filename)` function for automatic format detection by file extension (.puz, .ipuz, .jpz, .xml, .cfp).
+* Fixed clue answer round-tripping for `ipuz` files. Clue answers are now correctly preserved or inferred from the grid.
+* Implemented `Grid.getWord(cells)` to support automated answer inference in `Puzzle.fromDict`.
+* Reorganized and expanded the test suite in a new `tests/` directory.
+* Added comprehensive docstrings and comments across all Python files.
+* Exported core classes (`Grid`, `Cell`, `Clue`) and the `load` function in the top-level `pypuz` package.
+* Completely overhauled `README.md` with detailed usage and development information.
+* Retired redundant `README.txt`.

@@ -1,1 +1,1 @@
-from .pypuz import Puzzle, Grid, Cell, Clue
+from .pypuz import Puzzle, Grid, Cell, Clue, load

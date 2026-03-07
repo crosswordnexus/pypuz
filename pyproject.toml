@@ -4,7 +4,7 @@ build-backend = 'setuptools.build_meta'
 
 [tool.poetry]
 name = "pypuz"
-version = "2025.9.24"
+version = "2026.3.7"
 description = "Reading and writing crossword files in Python"
 authors = ["Alex Boisvert <crosswordnexus@gmail.com>"]
 

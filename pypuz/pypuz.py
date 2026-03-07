@@ -572,10 +572,30 @@ class Puzzle:
         return Puzzle().fromDict(jpzdata)
     #END fromJPZ()
 
-    def fromAmuseLabs(self, s):
+def fromAmuseLabs(self, s):
         """
         Load a puzzle from AmuseLabs data.
         """
         data = amuselabs.read_amuselabs_data(s)
         return Puzzle().fromDict(data)
     #END fromAmuseLabs()
+
+def load(filename):
+    """
+    Load a puzzle from a file, automatically detecting the format based on the extension.
+    
+    Supported extensions: .puz, .ipuz, .jpz, .cfp, .xml (treated as JPZ)
+    """
+    import os
+    ext = os.path.splitext(filename)[1].lower()
+    p = Puzzle()
+    if ext == '.puz':
+        return p.fromPuz(filename)
+    elif ext == '.ipuz':
+        return p.fromIPuz(filename)
+    elif ext == '.jpz' or ext == '.xml':
+        return p.fromJPZ(filename)
+    elif ext == '.cfp':
+        return p.fromCFP(filename)
+    else:
+        raise ValueError(f"Unsupported file extension: {ext}")

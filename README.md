@@ -34,18 +34,26 @@ poetry add pypuz
 
 ### Loading a Puzzle
 
+The easiest way to load a puzzle is using the `load` function, which automatically detects the format based on the file extension.
+
 ```python
-from pypuz import Puzzle
+import pypuz
 
-# Load from a .puz file
-puzzle = Puzzle().fromPuz('my_puzzle.puz')
-
-# Load from an .ipuz file
-puzzle = Puzzle().fromIPuz('my_puzzle.ipuz')
+# Load any supported file type (.puz, .ipuz, .jpz, .xml, .cfp)
+puzzle = pypuz.load('my_puzzle.puz')
 
 # Access metadata
 print(f"Title: {puzzle.metadata.title}")
 print(f"Author: {puzzle.metadata.author}")
+```
+
+You can also load specifically if needed (maintains backward compatibility):
+
+```python
+from pypuz import Puzzle
+
+puzzle = Puzzle().fromPuz('my_puzzle.puz')
+puzzle = Puzzle().fromIPuz('my_puzzle.ipuz')
 ```
 
 ### Inspecting the Grid
