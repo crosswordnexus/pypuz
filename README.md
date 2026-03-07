@@ -115,18 +115,22 @@ To make a new release of `pypuz`:
 
 1.  **Merge to Main**: Ensure all changes are merged into the `main` (or `master`) branch.
 2.  **Bump Version**: Update the `version` in `pyproject.toml` and document changes in `CHANGES.txt`.
-3.  **Tag the Release**: Create a Git tag for the version.
-    ```bash
-    git checkout main
-    git pull origin main
-    git tag -a v2026.3.7 -m "Release version 2026.3.7"
-    git push origin main --tags
-    ```
+3.  **Create a Release and Tag**:
+    *   **Option A: CLI**:
+        ```bash
+        git checkout main
+        git pull origin main
+        git tag -a v2026.3.7 -m "Release version 2026.3.7"
+        git push origin main --tags
+        ```
+    *   **Option B: GitHub UI**: Navigate to the "Releases" section of the repository, click "Draft a new release", and create a new tag (e.g., `v2026.3.7`) targeting the `main` branch. Use the contents of `CHANGES.txt` for the release description.
 4.  **Publish to PyPI**:
+    Regardless of how the Git tag is created, the package must be manually uploaded to PyPI (unless a GitHub Action is configured):
     ```bash
     poetry build
     twine upload dist/*
     ```
+    *Note: PyPI authentication is independent of your local Git/GitHub user.*
 
 ## License
 
