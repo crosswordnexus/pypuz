@@ -15,17 +15,18 @@ def test_clue_answer():
 
     # Test toIPuz and fromIPuz roundtrip for answer
     ipuz_file = 'test_temp.ipuz'
-    puzzle.toIPuz(ipuz_file)
-    
-    puzzle2 = Puzzle().fromIPuz(ipuz_file)
-    print(f"\nTesting roundtrip from IPuz:")
-    for cluelist in puzzle2.clues:
-        print(f"\n{cluelist['title']}:")
-        for clue in cluelist['clues']:
-            print(f"{clue.number}. {clue.clue} -> {clue.answer}")
-            assert clue.answer is not None, f"Answer for clue {clue.number} is None after roundtrip"
-
-    os.remove(ipuz_file)
+    try:
+        puzzle.toIPuz(ipuz_file)
+        puzzle2 = Puzzle().fromIPuz(ipuz_file)
+        print(f"\nTesting roundtrip from IPuz:")
+        for cluelist in puzzle2.clues:
+            print(f"\n{cluelist['title']}:")
+            for clue in cluelist['clues']:
+                print(f"{clue.number}. {clue.clue} -> {clue.answer}")
+                assert clue.answer is not None, f"Answer for clue {clue.number} is None after roundtrip"
+    finally:
+        if os.path.exists(ipuz_file):
+            os.remove(ipuz_file)
     print("\nAll tests passed!")
 
 if __name__ == "__main__":

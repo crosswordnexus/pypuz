@@ -572,7 +572,7 @@ class Puzzle:
         return Puzzle().fromDict(jpzdata)
     #END fromJPZ()
 
-def fromAmuseLabs(self, s):
+    def fromAmuseLabs(self, s):
         """
         Load a puzzle from AmuseLabs data.
         """
