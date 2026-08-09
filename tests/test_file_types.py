@@ -1,7 +1,7 @@
 import os
 from pypuz.pypuz import Puzzle
 
-def test_file_load(filename, loader_name):
+def _test_file_load(filename, loader_name):
     print(f"Testing {loader_name} with {filename}...")
     puz_file = os.path.join('pypuz', 'test_files', filename)
     
@@ -25,10 +25,10 @@ def test_file_load(filename, loader_name):
     print(f"Success for {filename}!")
 
 def test_all_files():
-    test_file_load('3x.puz', 'fromPuz')
-    test_file_load('3x.ipuz', 'fromIPuz')
-    test_file_load('3x.jpz', 'fromJPZ')
-    test_file_load('3x.cfp', 'fromCFP')
+    _test_file_load('3x.puz', 'fromPuz')
+    _test_file_load('3x.ipuz', 'fromIPuz')
+    _test_file_load('3x.jpz', 'fromJPZ')
+    _test_file_load('3x.cfp', 'fromCFP')
 
 if __name__ == "__main__":
     test_all_files()

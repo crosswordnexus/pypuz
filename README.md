@@ -88,12 +88,14 @@ puzzle.toPuz('output.puz')
 
 ## Running Tests
 
-Tests are located in the `tests/` directory and can be run with Python:
+Tests are located in the `tests/` directory and can be run using `pytest`:
 
 ```bash
-python tests/test_roundtrip.py
-python tests/test_grid.py
-python tests/test_file_types.py
+# Run all tests
+pytest
+
+# Or using poetry
+poetry run pytest
 ```
 
 ## Development

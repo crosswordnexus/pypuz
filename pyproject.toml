@@ -12,3 +12,6 @@ authors = ["Alex Boisvert <crosswordnexus@gmail.com>"]
 python = "^3.8"
 lxml = ">=5.4.0"
 Unidecode = ">=1.4.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

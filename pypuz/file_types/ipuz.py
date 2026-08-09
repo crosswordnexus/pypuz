@@ -63,7 +63,7 @@ def read_ipuzfile(f):
     # Remove some stuff from the puzzleKind
     kind = ipuzdata.get('kind', ["http://ipuz.org/crossword#1"])[0]
     kind = kind.replace('http://ipuz.org/', '')
-    kind = re.sub('\#\d+$', '', kind)
+    kind = re.sub(r'#\d+$', '', kind)
     # We'll need the width and height later
     width = ipuzdata.get('dimensions', {}).get('width')
     height = ipuzdata.get('dimensions', {}).get('height')
